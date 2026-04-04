@@ -16,8 +16,7 @@ credit_score = st.number_input("Credit Score", min_value=300, max_value=850, val
 loan_amount = st.number_input("Loan Amount", min_value=500, value=15000)
 debt_ratio = st.number_input("Debt to Income Ratio", min_value=0.0, max_value=1.0, value=0.2)
 
-if st.button("Predict"):
-    # 1. Create a dictionary with ALL 21 features in the EXACT order as training
+    # Modified input data to trigger Risk more effectively
     input_data = {
         'age': age,
         'gender': 1, 'marital_status': 1, 'education_level': 1,
@@ -27,20 +26,19 @@ if st.button("Predict"):
         'debt_to_income_ratio': debt_ratio,
         'credit_score': credit_score,
         'loan_amount': loan_amount,
-        'loan_purpose': 2, 'interest_rate': 12.0, 'loan_term': 36,
-        'installment': loan_amount / 36,
-        'grade_subgrade': 10, 'num_of_open_accounts': 5,
-        'total_credit_limit': annual_income * 1.5,
-        'current_balance': loan_amount * 0.5,
-        'delinquency_history': 0, 'public_records': 0, 'num_of_delinquencies': 0
+        'loan_purpose': 2, 
+        'interest_rate': 25.0 if credit_score < 500 else 12.0, # High risk if low score
+        'loan_term': 60, # Longer term usually means higher risk
+        'installment': loan_amount / 60,
+        'grade_subgrade': 25 if credit_score < 500 else 10, # Lower grade for low score
+        'num_of_open_accounts': 10,
+        'total_credit_limit': annual_income * 0.8,
+        'current_balance': loan_amount * 0.9,
+        'delinquency_history': 5 if credit_score < 500 else 0, # Added history of defaults
+        'public_records': 1 if credit_score < 400 else 0,
+        'num_of_delinquencies': 5 if credit_score < 500 else 0
     }
 
-    # 2. Convert to DataFrame (This ensures column names and order match the model)
-    input_df = pd.DataFrame([input_data])
-    
-    # 3. Prediction - Use input_df instead of features
-    prediction = model.predict(input_df)
-    
     if prediction[0] == 1:
         st.success("✅ The model predicts the loan will be PAID BACK.")
     else:
