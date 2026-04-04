@@ -19,21 +19,41 @@ debt_ratio = st.number_input("Debt to Income Ratio", min_value=0.0, max_value=1.
 # Since we have many features, for simplicity in this demo, 
 # we'll create a dummy array matching the model's expected input shape.
 # In a real app, you should add input fields for all 21 features.
-
 if st.button("Predict"):
-    # Dummy placeholder for other features (since our model expects 21 inputs)
-    # You should ideally capture all inputs or use a pre-set default
-    features = np.zeros((1, 21)) 
-    features[0, 0] = age
-    features[0, 4] = annual_income
-    features[0, 8] = credit_score
-    features[0, 9] = loan_amount
-    features[0, 7] = debt_ratio
+    # 1. Create a dictionary with ALL 21 features used during training
+    # Initializing with average/common values from your dataset
+    input_data = {
+        'age': age,
+        'gender': 1,            # Default: Male
+        'marital_status': 1,    # Default: Married
+        'education_level': 1,   # Default: Bachelor's
+        'annual_income': annual_income,
+        'monthly_income': annual_income / 12,
+        'employment_status': 1, # Default: Employed
+        'debt_to_income_ratio': debt_ratio,
+        'credit_score': credit_score,
+        'loan_amount': loan_amount,
+        'loan_purpose': 2,      # Default: Debt Consolidation
+        'interest_rate': 12.0,  # Average Interest
+        'loan_term': 36,        # Standard term
+        'installment': loan_amount / 36,
+        'grade_subgrade': 10,
+        'num_of_open_accounts': 5,
+        'total_credit_limit': annual_income * 1.5,
+        'current_balance': loan_amount * 0.5,
+        'delinquency_history': 0, 
+        'public_records': 0,
+        'num_of_delinquencies': 0
+    }
+
+    # 2. Convert to DataFrame to maintain column order
+    input_df = pd.DataFrame([input_data])
     
-    prediction = model.predict(features)
+    # 3. Prediction
+    prediction = model.predict(input_df)
     
     if prediction[0] == 1:
-        st.success("The model predicts the loan will be PAID BACK.")
+        st.success("✅ The model predicts the loan will be PAID BACK.")
     else:
-        st.error("The model predicts the loan will NOT be paid back.")
+        st.error("⚠️ RISK DETECTED: The model predicts a potential DEFAULT.")
         
