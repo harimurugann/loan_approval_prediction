@@ -29,7 +29,7 @@ Libraries: Pandas, NumPy, Scikit-learn, Seaborn, Matplotlib, Joblib
 Deployment: Streamlit (Web App)
 
 🚀 How to Run
-git clone https://github.com/your-username/loan-approval-prediction.git
+https://github.com/harimurugann/loan_approval_prediction
 
 Install dependencies:
 pip install -r requirements.txt
