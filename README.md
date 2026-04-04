@@ -34,8 +34,7 @@ https://github.com/harimurugann/loan_approval_prediction
 Install dependencies:
 pip install -r requirements.txt
 
-Run the Streamlit app:
-streamlit run app.py
+Run the Streamlit app: https://credit-eligibility-check.streamlit.app/
 
 
 📈 Results
