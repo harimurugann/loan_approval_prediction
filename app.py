@@ -36,4 +36,4 @@ if st.button("Predict"):
         st.success("The model predicts the loan will be PAID BACK.")
     else:
         st.error("The model predicts the loan will NOT be paid back.")
-          
+        
