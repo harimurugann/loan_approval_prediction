@@ -1,3 +1,5 @@
+Live Demo: [Click here to view the app] https://credit-eligibility-check.streamlit.app/
+
 🚀 Loan Approval Prediction using Machine Learning
 This project aims to predict the likelihood of a loan being approved or paid back based on various customer attributes such as credit score, income, debt-to-income ratio, and more. It utilizes a dataset of 20,000 records to train a robust Machine Learning model.
 
