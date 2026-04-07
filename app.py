@@ -73,26 +73,30 @@ input_data = pd.DataFrame({
 
 if st.button("Analyze Loan Risk"):
     try:
-        # Get Probability
+        # Get Probability (0 -> Reject, 1 -> Approved)
         prob = model.predict_proba(input_data)[0][1]
         approval_chance = round(prob * 100, 2)
         
         st.markdown("---")
-        st.subheader("Results & Risk Analysis")
+        st.subheader("📊 Results & Risk Analysis")
         
-        # Risk Meter
+        # Risk Meter Logic based on probability
         if approval_chance >= 70:
-            st.success(f"**High Approval Chance: {approval_chance}%**")
+            st.success(f"🎉 **High Approval Chance: {approval_chance}%**")
             st.progress(prob)
+            st.balloons() # Chinna celebration effect
         elif approval_chance >= 40:
-            st.warning(f"**Moderate Risk: {approval_chance}% Chance**")
+            st.warning(f"⚠️ **Moderate Risk: {approval_chance}% Chance**")
             st.progress(prob)
         else:
-            st.error(f"**High Risk of Rejection: {approval_chance}% Chance**")
+            st.error(f"❌ **High Risk of Rejection: {approval_chance}% Chance**")
             st.progress(prob)
 
-        # Insights
-        st.info(f"💡 **Quick Insight:** Your disposable income is ${round(disposable_income, 2)} per month.")
+        # Final Insights (Using the new feature we calculated)
+        st.info(f"💡 **Quick Insight:** After current debts, your monthly disposable income is approximately **${round(float(disposable_income), 2)}**.")
         
     except Exception as e:
-        st.error(f"Prediction Error: {e}. Make sure you uploaded the NEW .sav file to GitHub!")
+        st.error(f"Prediction Error: {e}. Please ensure the model file is updated with new features.")
+
+st.markdown("---")
+st.caption("AI Data Engineer Project | Advanced Loan Risk Analytics")
