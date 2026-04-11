@@ -108,6 +108,50 @@ with tab3:
 
     current_chance = chance if 'chance' in locals() else 50
 
+    # --- WHAT-IF SIMULATOR SECTION ---
+st.markdown("---")
+st.header("🎯 What-If Approval Simulator")
+st.write("Current status 'Rejected' or 'Moderate'-ah irundha, kila irukura sliders-a adjust panni status-a approve panna try pannunga.")
+
+col_sim1, col_sim2 = st.columns(2)
+
+with col_sim1:
+    sim_credit = st.slider("Simulate Credit Score Increase", min_value=300, max_value=900, value=int(credit_score))
+    sim_income = st.slider("Simulate Annual Income Increase ($)", min_value=int(annual_income), max_value=int(annual_income + 50000), step=1000)
+
+with col_sim2:
+    sim_loan = st.slider("Simulate Lower Loan Amount ($)", min_value=1000, max_value=int(loan_amount), step=500, value=int(loan_amount))
+
+# Calculate updated metrics for the simulator
+sim_monthly_income = sim_income / 12
+sim_monthly_debt = sim_monthly_income * debt_to_income_ratio # Assuming DTI stays same
+sim_disposable = sim_monthly_income - sim_monthly_debt
+sim_lti = sim_loan / sim_income
+
+# Create simulation dataframe
+sim_df = input_df.copy()
+sim_df['credit_score'] = [sim_credit]
+sim_df['annual_income'] = [sim_income]
+sim_df['loan_amount'] = [sim_loan]
+sim_df['monthly_income'] = [sim_monthly_income]
+sim_df['disposable_income'] = [sim_disposable]
+sim_df['loan_to_income_ratio'] = [sim_lti]
+
+# Predict for simulation
+sim_prob = model.predict_proba(sim_df)[0][1]
+sim_chance = round(sim_prob * 100, 2)
+
+# Display Simulation Result
+st.subheader(f"Simulated Approval Chance: {sim_chance}%")
+
+if sim_chance >= 70:
+    st.balloons()
+    st.success(f"✅ Success! With a Credit Score of {sim_credit} and Income of ${sim_income}, your loan would likely be **APPROVED**.")
+elif sim_chance >= 40:
+    st.warning("⚠️ Still in Moderate Risk. Try increasing your Credit Score or decreasing the Loan Amount further.")
+else:
+    st.error("❌ Still in High Risk. Significant financial improvements are needed.")
+
     # Status & Colour Logic
     if current_chance >= 70:
         status_colour, status_text = "#00CC96", "SAFE / APPROVED"
