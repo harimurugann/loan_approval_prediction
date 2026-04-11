@@ -102,22 +102,64 @@ with tab2:
         
         csv_res = data.to_csv(index=False).encode('utf-8')
         st.download_button("📥 Download Result CSV", csv_res, "bulk_results.csv", "text/csv")
-
-# --- TAB 3: MODEL ANALYTICS ---
+        # --- TAB 3: MODEL ANALYTICS ---
 with tab3:
-    st.header("📈 Model Performance Analytics")
-    st.subheader("How the AI makes decisions:")
+    st.header("📈 Model Performance & Risk Insights")
     
-    # Feature Importance Data
-    importance_data = pd.DataFrame({
-        'Feature': ['Credit Score', 'Income', 'Loan Amount', 'DTI', 'Age'],
-        'Importance': [0.4, 0.25, 0.15, 0.12, 0.08]
-    })
+    # 1. Risk Meter (Gauge Chart)
+    st.subheader("Current Assessment Risk Meter")
     
-    fig = px.bar(importance_data, x='Importance', y='Feature', orientation='h', 
-                 color='Importance', title="Key Decision Drivers")
-    st.plotly_chart(fig)
-    st.info("💡 **Engineer Note:** This model prioritizes Credit Score as the primary indicator for loan safety.")
+    # Inga namma Single Prediction tab-la irundhu vara 'chance' value-a use pannuvom
+    # Oru vela input illana default-ah 50% nu vachukalam
+    current_chance = chance if 'chance' in locals() else 50
+    
+    fig_gauge = px.choropleth() # Empty base for gauge
+    import plotly.graph_objects as go
 
-st.markdown("---")
-st.caption("AI Data Engineer | Portfolio Project 2026")
+    fig_gauge = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = current_chance,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': "Approval Probability", 'font': {'size': 24}},
+        gauge = {
+            'axis': {'range': [0, 100], 'tickwidth': 1},
+            'bar': {'color': "black"},
+            'steps': [
+                {'range': [0, 40], 'color': "#FF4B4B"},   # RED: High Risk
+                {'range': [40, 70], 'color': "#FFAA00"}, # ORANGE: Moderate
+                {'range': [70, 100], 'color': "#00CC96"} # GREEN: Best
+            ],
+            'threshold': {
+                'line': {'color': "white", 'width': 4},
+                'thickness': 0.75,
+                'value': current_chance
+            }
+        }
+    ))
+    
+    st.plotly_chart(fig_gauge, use_container_width=True)
+
+    # 2. Feature Importance (Color Differentiated Bar Chart)
+    st.subheader("Key Decision Drivers")
+    
+    importance_df = pd.DataFrame({
+        'Feature': ['Credit Score', 'Annual Income', 'Loan Amount', 'DTI Ratio', 'Age'],
+        'Importance %': [45, 25, 15, 10, 5],
+        'Impact Level': ['High Impact', 'High Impact', 'Moderate', 'Low Impact', 'Low Impact']
+    })
+
+    fig_bar = px.bar(importance_df, 
+                     x='Importance %', 
+                     y='Feature', 
+                     orientation='h',
+                     color='Impact Level',
+                     color_discrete_map={
+                         'High Impact': '#00CC96', # Greenish
+                         'Moderate': '#FFAA00',    # Orange
+                         'Low Impact': '#FF4B4B'    # Red
+                     },
+                     title="How AI Weights Your Data")
+    
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+    st.info("💡 **Pro Tip:** Intha visuals unga model-oda 'Transparency'-a user-kku explain panna help pannum.")
