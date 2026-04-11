@@ -102,52 +102,55 @@ with tab2:
         
         csv_res = data.to_csv(index=False).encode('utf-8')
         st.download_button("📥 Download Result CSV", csv_res, "bulk_results.csv", "text/csv")
-        # --- TAB 3: MODEL ANALYTICS (DYNAMIC COLOURS) ---
+      # --- TAB 3: MODEL ANALYTICS (REASON ANALYSIS) ---
 with tab3:
-    st.header("📈 Live Risk Analytics")
+    st.header("📈 Live Risk Analytics & Reasonings")
 
-    # Single Prediction tab-la irundhu vara 'chance' value-a check panrom
-    # User innum predict button click pannala na default-ah 50 (Moderate) nu vachukalam
     current_chance = chance if 'chance' in locals() else 50
 
-    # 1. Logic to set the colour based on probability
+    # Status & Colour Logic
     if current_chance >= 70:
-        status_colour = "#00CC96" # GREEN
-        status_text = "SAFE / APPROVED"
+        status_colour, status_text = "#00CC96", "SAFE / APPROVED"
     elif current_chance >= 40:
-        status_colour = "#FFAA00" # YELLOW / ORANGE
-        status_text = "MODERATE RISK"
+        status_colour, status_text = "#FFAA00", "MODERATE RISK"
     else:
-        status_colour = "#FF4B4B" # RED / REJECTION
-        status_text = "HIGH RISK / REJECTION"
+        status_colour, status_text = "#FF4B4B", "HIGH RISK / REJECTION"
 
     st.subheader(f"Current Status: :{status_colour}[{status_text}]")
 
-    # 2. Dynamic Bar Chart
-    # Indha chart-oda bar colour ippo user-oda risk status-kku thagappadi maarum
+    # 1. Dynamic Bar Chart
     importance_df = pd.DataFrame({
         'Feature': ['Credit Score', 'Annual Income', 'Loan Amount', 'DTI Ratio', 'Age'],
         'Importance %': [45, 25, 15, 10, 5]
     })
-
-    fig_bar = px.bar(importance_df, 
-                     x='Importance %', 
-                     y='Feature', 
-                     orientation='h',
-                     title=f"Feature Impact for {status_text}")
-    
-    # Indha line thaan chart colour-a predict panna result-kku mathum
+    fig_bar = px.bar(importance_df, x='Importance %', y='Feature', orientation='h')
     fig_bar.update_traces(marker_color=status_colour) 
-    
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    # 3. Quick Insight Message
-    if current_chance < 40:
-        st.error(f"⚠️ Model identifies this as a **High Risk** profile. Red bars indicate the features contributing to this rejection risk.")
-    elif current_chance >= 70:
-        st.success(f"✅ Model identifies this as a **Strong** profile. Green bars show the stability of the features.")
+    # 2. REASONING SECTION (New)
+    st.markdown("### 🔍 Why this Result?")
+    
+    reasons = []
+    
+    # Logic to identify specific red flags
+    if credit_score < 600:
+        reasons.append(f"❌ **Low Credit Score ({credit_score}):** Most banks require at least 700 for automatic approval.")
+    if debt_to_income_ratio > 0.45:
+        reasons.append(f"❌ **High Debt-to-Income ({debt_to_income_ratio}):** More than 45% of your income goes to debt, making new loans risky.")
+    if loan_amount > (annual_income * 2):
+        reasons.append(f"❌ **High Loan-to-Income:** Requested loan is more than twice your annual income.")
+    if age < 21:
+        reasons.append(f"⚠️ **Young Age ({age}):** Limited credit history might be affecting the confidence score.")
+
+    # Displaying the Reasons
+    if status_text == "SAFE / APPROVED":
+        st.write("✅ All your financial metrics are within the 'Low Risk' threshold.")
     else:
-        st.warning(f"💡 Model identifies this as a **Moderate** profile. Yellow bars indicate caution.")
+        for r in reasons:
+            st.write(r)
+            
+    if not reasons and status_text != "SAFE / APPROVED":
+        st.write("📝 The model identifies a combination of factors leading to moderate risk. Consider reducing the loan amount for better odds.")
 
     st.markdown("---")
-    st.info("💡 **AI Logic:** The color of the chart reflects your overall loan eligibility status in real-time.")
+    st.info("💡 **AI Tip:** Improving the factors marked with ❌ will significantly move the chart towards Green.")
