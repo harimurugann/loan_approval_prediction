@@ -102,64 +102,52 @@ with tab2:
         
         csv_res = data.to_csv(index=False).encode('utf-8')
         st.download_button("📥 Download Result CSV", csv_res, "bulk_results.csv", "text/csv")
-        # --- TAB 3: MODEL ANALYTICS ---
+        # --- TAB 3: MODEL ANALYTICS (DYNAMIC COLOURS) ---
 with tab3:
-    st.header("📈 Model Performance & Risk Insights")
-    
-    # 1. Risk Meter (Gauge Chart)
-    st.subheader("Current Assessment Risk Meter")
-    
-    # Inga namma Single Prediction tab-la irundhu vara 'chance' value-a use pannuvom
-    # Oru vela input illana default-ah 50% nu vachukalam
+    st.header("📈 Live Risk Analytics")
+
+    # Single Prediction tab-la irundhu vara 'chance' value-a check panrom
+    # User innum predict button click pannala na default-ah 50 (Moderate) nu vachukalam
     current_chance = chance if 'chance' in locals() else 50
-    
-    fig_gauge = px.choropleth() # Empty base for gauge
-    import plotly.graph_objects as go
 
-    fig_gauge = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = current_chance,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "Approval Probability", 'font': {'size': 24}},
-        gauge = {
-            'axis': {'range': [0, 100], 'tickwidth': 1},
-            'bar': {'color': "black"},
-            'steps': [
-                {'range': [0, 40], 'color': "#FF4B4B"},   # RED: High Risk
-                {'range': [40, 70], 'color': "#FFAA00"}, # ORANGE: Moderate
-                {'range': [70, 100], 'color': "#00CC96"} # GREEN: Best
-            ],
-            'threshold': {
-                'line': {'color': "white", 'width': 4},
-                'thickness': 0.75,
-                'value': current_chance
-            }
-        }
-    ))
-    
-    st.plotly_chart(fig_gauge, use_container_width=True)
+    # 1. Logic to set the colour based on probability
+    if current_chance >= 70:
+        status_colour = "#00CC96" # GREEN
+        status_text = "SAFE / APPROVED"
+    elif current_chance >= 40:
+        status_colour = "#FFAA00" # YELLOW / ORANGE
+        status_text = "MODERATE RISK"
+    else:
+        status_colour = "#FF4B4B" # RED / REJECTION
+        status_text = "HIGH RISK / REJECTION"
 
-    # 2. Feature Importance (Color Differentiated Bar Chart)
-    st.subheader("Key Decision Drivers")
-    
+    st.subheader(f"Current Status: :{status_colour}[{status_text}]")
+
+    # 2. Dynamic Bar Chart
+    # Indha chart-oda bar colour ippo user-oda risk status-kku thagappadi maarum
     importance_df = pd.DataFrame({
         'Feature': ['Credit Score', 'Annual Income', 'Loan Amount', 'DTI Ratio', 'Age'],
-        'Importance %': [45, 25, 15, 10, 5],
-        'Impact Level': ['High Impact', 'High Impact', 'Moderate', 'Low Impact', 'Low Impact']
+        'Importance %': [45, 25, 15, 10, 5]
     })
 
     fig_bar = px.bar(importance_df, 
                      x='Importance %', 
                      y='Feature', 
                      orientation='h',
-                     color='Impact Level',
-                     color_discrete_map={
-                         'High Impact': '#00CC96', # Greenish
-                         'Moderate': '#FFAA00',    # Orange
-                         'Low Impact': '#FF4B4B'    # Red
-                     },
-                     title="How AI Weights Your Data")
+                     title=f"Feature Impact for {status_text}")
+    
+    # Indha line thaan chart colour-a predict panna result-kku mathum
+    fig_bar.update_traces(marker_color=status_colour) 
     
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    st.info("💡 **Pro Tip:** Intha visuals unga model-oda 'Transparency'-a user-kku explain panna help pannum.")
+    # 3. Quick Insight Message
+    if current_chance < 40:
+        st.error(f"⚠️ Model identifies this as a **High Risk** profile. Red bars indicate the features contributing to this rejection risk.")
+    elif current_chance >= 70:
+        st.success(f"✅ Model identifies this as a **Strong** profile. Green bars show the stability of the features.")
+    else:
+        st.warning(f"💡 Model identifies this as a **Moderate** profile. Yellow bars indicate caution.")
+
+    st.markdown("---")
+    st.info("💡 **AI Logic:** The color of the chart reflects your overall loan eligibility status in real-time.")
