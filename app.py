@@ -49,7 +49,7 @@ with st.sidebar:
             st.write("I'm learning! Try asking about 'Credit', 'DTI', or 'Income'.")
     
     st.markdown("---")
-    st.write("👨‍💻 **Dev:** Vimal | AI Data Engineer")
+    st.write("👨‍💻 **Dev:** Hari murugan | Data scientist")
 
 # --- TABS ---
 tab1, tab2, tab3, tab4 = st.tabs(["👤 Assessment", "📂 Bulk", "📈 Analytics", "🔐 Admin & Retrain"])
