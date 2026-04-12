@@ -92,4 +92,51 @@ with tab1:
         'loan_purpose':['Business'], 'interest_rate':[10.5], 'loan_term':[36],
         'installment':[loan_amount/36], 'grade_subgrade':['B1'], 'num_of_open_accounts':[5],
         'total_credit_limit':[annual_income*1.5], 'current_balance':[loan_amount*0.5], 'delinquency_history':[0],
-        'public_records':[0], 'num_of_delinquencies':[0], 'monthly_debt':[(annual_income/12)*dti],
+        'public_records':[0], 'num_of_delinquencies':[0], 'monthly_debt':[(annual_income/12)*dti], 
+        'disposable_income':[(annual_income/12) - ((annual_income/12)*dti)], 'loan_to_income_ratio':[loan_amount/annual_income if annual_income > 0 else 0]
+    })
+
+    if st.button("Run Prediction"):
+        prob = model.predict_proba(input_df)[0][1]
+        chance = round(prob * 100, 2)
+        st.session_state['last_chance'] = chance
+        res = "APPROVED" if chance >= 50 else "REJECTED"
+        
+        log_user_data(name, annual_income, credit_score, loan_amount, res, chance)
+        st.success(f"Final Decision: {res} ({chance}% Confidence)")
+
+# --- TAB 3: INSIGHTS ---
+with tab3:
+    st.header("Decision Insights")
+    cur_chance = st.session_state.get('last_chance', 0)
+    color = "#00CC96" if cur_chance >= 70 else ("#FFAA00" if cur_chance >= 40 else "#FF4B4B")
+    
+    st.subheader(f"Current Probability Score: :{color}[{cur_chance}%]")
+    
+    # Feature Importance Visualization
+    imp_df = pd.DataFrame({'Feature': ['Credit Score', 'Income', 'Loan Amount', 'DTI', 'Age'], 'Impact %': [45, 25, 15, 10, 5]})
+    fig = px.bar(imp_df, x='Impact %', y='Feature', orientation='h', template="plotly_dark")
+    fig.update_traces(marker_color=color)
+    st.plotly_chart(fig, use_container_width=True)
+
+# --- TAB 4: ADMIN PANEL ---
+with tab4:
+    st.header("🔐 Admin Security")
+    pwd_input = st.text_input("Admin Password", type="password")
+    
+    if pwd_input == st.session_state['admin_pwd']:
+        st.success("Access Granted.")
+        if os.path.exists('user_logs.csv'):
+            df_logs = pd.read_csv(    'user_logs.csv')
+            st.dataframe(df_logs, use_container_width=True)
+            if st.button("Delete Logs"):
+                os.remove('user_logs.csv')
+                st.rerun()
+    elif pwd_input != "":
+        st.error("Access Denied.")
+
+with st.sidebar:
+    st.title("🛡️ System Info")
+    st.write("App Status: Active")
+    st.write("Theme: Permanent Dark Mode")
+    st.info("AI Data Engineer Dashboard v2.0")
