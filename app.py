@@ -67,7 +67,7 @@ with st.sidebar:
         elif "credit" in q: st.success("💡 Maintain 100% on-time payments for 6 months to boost your score.")
         else: st.write("Try asking about 'Credit' or 'DTI'.")
     st.markdown("---")
-    st.write("👨‍💻 **Dev:** Vimal | AI Data Engineer")
+    st.write("👨‍💻 **Dev:** Hari murugan |Data scientist")
     st.caption("Version: 3.0.0 (Ultimate)")
 
 # --- MAIN TABS ---
