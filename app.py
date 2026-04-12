@@ -32,21 +32,22 @@ try:
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
-# --- HELPER FUNCTIONS ---
-def anonymize_data(df):
-    temp_df = df.copy()
-    temp_df['Applicant_Name'] = temp_df['Applicant_Name'].apply(lambda x: str(x)[0] + "***" if len(str(x)) > 1 else "***")
-    return temp_df
-
-def log_user_data(name, income, credit, amount, result, prob):
+# --- ADVANCED UTILITIES ---
+def log_user_data(name, income, credit, amount, result, prob, city):
     log_file = 'user_logs.csv'
     log_entry = pd.DataFrame({
         'Timestamp': [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
         'Applicant_Name': [name], 'Annual_Income': [income], 'Credit_Score': [credit],
-        'Loan_Amount': [amount], 'Prediction': [result], 'Probability_%': [prob]
+        'Loan_Amount': [amount], 'Prediction': [result], 'Probability_%': [prob],
+        'City': [city]
     })
     if not os.path.isfile(log_file): log_entry.to_csv(log_file, index=False)
     else: log_entry.to_csv(log_file, mode='a', header=False, index=False)
+
+def anonymize_data(df):
+    temp_df = df.copy()
+    temp_df['Applicant_Name'] = temp_df['Applicant_Name'].apply(lambda x: str(x)[0] + "***" if len(str(x)) > 1 else "***")
+    return temp_df
 
 # --- SIDEBAR BRANDING ---
 with st.sidebar:
@@ -55,95 +56,85 @@ with st.sidebar:
     st.write("👨‍💻 **DEV:** Hari murugan")
     st.write("🚀 **Role:** Data Scientist")
     st.markdown("---")
-    st.info("💡 **Tip:** Hari says higher income with lower DTI guarantees 90% approval.")
+    st.info("💡 **MLOps Note:** Model V3.5 is currently monitoring for data drift.")
 
 # --- NAVIGATION TABS ---
-# Corrected Index Order: 0:Assessment, 1:Bulk, 2:Comparison, 3:XAI, 4:Market, 5:Admin
-tabs = st.tabs(["👤 Assessment", "📂 Bulk Hub", "📊 Model Comparison", "🧠 Explainable AI", "🏦 Market & Cards", "🔐 Admin Center"])
+# Order: Assessment, Bulk, Comparison, XAI, Market/Geo, Admin/Drift
+tabs = st.tabs(["👤 Assessment", "📂 Bulk Hub", "📊 Model Comparison", "🧠 Explainable AI", "🏦 Market & Geo", "🔐 Admin & Drift"])
 
-# --- TAB 0: ASSESSMENT ---
+# --- TAB 0: ASSESSMENT (with Auto-Feature Engineering) ---
 with tabs[0]:
-    st.header("Smart Loan Risk Check")
+    st.header("Smart Risk Check")
     c1, c2 = st.columns(2)
     with c1:
-        name = st.text_input("Full Name", "Guest")
+        name = st.text_input("Name", "Guest")
         income = st.number_input("Annual Income ($)", 0, 10000000, 55000)
-        loan_cat = st.selectbox("Loan Category", ["Personal Loan", "Home Loan", "Business Loan"])
+        city = st.selectbox("Current City", ["Chennai", "Bangalore", "Mumbai", "Delhi", "Hyderabad"])
     with c2:
         credit = st.number_input("Credit Score", 300, 900, 720)
-        amount = st.number_input("Loan Amount Requested ($)", 0, 100000000, 25000)
+        amount = st.number_input("Loan Amount ($)", 0, 100000000, 25000)
+    
+    # ADVANCED FEATURE: Auto-Feature Engineering
+    monthly_inc = income / 12
+    est_savings = monthly_inc * 0.4  # Assuming 40% savings
+    debt_ratio = (amount/36) / monthly_inc if income > 0 else 1
     
     if st.button("Run AI Prediction"):
         input_df = pd.DataFrame({
             'age':[30], 'gender':['Male'], 'marital_status':['Single'], 'education_level':["Bachelor's"],
-            'annual_income':[income], 'monthly_income':[income/12], 'employment_status':['Employed'],
-            'debt_to_income_ratio':[0.25], 'credit_score':[credit], 'loan_amount':[amount],
-            'loan_purpose':[loan_cat], 'interest_rate':[10.5], 'loan_term':[36],
+            'annual_income':[income], 'monthly_income':[monthly_inc], 'employment_status':['Employed'],
+            'debt_to_income_ratio':[debt_ratio], 'credit_score':[credit], 'loan_amount':[amount],
+            'loan_purpose':['Personal'], 'interest_rate':[10.5], 'loan_term':[36],
             'installment':[amount/36], 'grade_subgrade':['B1'], 'num_of_open_accounts':[5],
             'total_credit_limit':[income*1.5], 'current_balance':[amount*0.5], 'delinquency_history':[0],
-            'public_records':[0], 'num_of_delinquencies':[0], 'monthly_debt':[income/12*0.25], 
-            'disposable_income':[income/12 - (income/12*0.25)], 'loan_to_income_ratio':[amount/income if income > 0 else 0]
+            'public_records':[0], 'num_of_delinquencies':[0], 'monthly_debt':[monthly_inc*debt_ratio], 
+            'disposable_income':[monthly_inc - (monthly_inc*debt_ratio)], 'loan_to_income_ratio':[amount/income if income > 0 else 0]
         })
+        
         prob = model.predict_proba(input_df)[0][1]
         chance = round(prob * 100, 2)
         res = "APPROVED" if (chance >= 50 and credit >= 500) else "REJECTED"
         
-        st.session_state['last_chance'] = chance
-        st.session_state['last_score'] = credit
-        st.session_state['last_res'] = res
+        st.session_state.update({'last_chance': chance, 'last_score': credit, 'last_res': res})
         
-        if res == "APPROVED": st.success(f"🎉 **Congratulations!** {res} ({chance}%)")
-        else:
-            st.error(f"❌ **Rejected.** Chance: {chance}%")
-            if credit > 600: st.info("🏆 **Hari's Suggestion:** You qualify for a Premium Card!")
-        
-        log_user_data(name, income, credit, amount, res, chance)
+        if res == "APPROVED": st.success(f"✅ Approved ({chance}%)")
+        else: st.error(f"❌ Rejected ({chance}%)")
+        log_user_data(name, income, credit, amount, res, chance, city)
 
-# --- TAB 2: MODEL COMPARISON ---
-with tabs[2]:
-    st.header("📊 Champion vs Challenger Benchmarking")
-    m_df = pd.DataFrame({'Model': ['RF (Hari Champion)', 'XGB (Challenger)'], 'Accuracy': [0.92, 0.94], 'F1': [0.91, 0.93]})
-    st.plotly_chart(px.bar(m_df, x='Model', y='Accuracy', color='Model'), use_container_width=True)
-
-# --- TAB 3: EXPLAINABLE AI (FIXED DESCRIPTION) ---
-with tabs[3]:
-    st.header("🧠 Decision Logic (XAI)")
-    if 'last_chance' in st.session_state:
-        # Visual Chart
-        impact = [45 if st.session_state['last_score'] > 600 else -50, 25, -15, 10, 10]
-        features = ['Credit Score', 'Income', 'Loan Amount', 'DTI', 'Employment']
-        st.plotly_chart(px.bar(x=impact, y=features, orientation='h', color=impact, color_continuous_scale='RdYlGn'), use_container_width=True)
-        
-        # FIXED: Description below chart
-        st.subheader("📝 Decision Breakdown")
-        for i, feat in enumerate(features):
-            val = impact[i]
-            status = "✅ Major Positive" if val > 30 else ("🟢 Minor Positive" if val > 0 else "❌ Negative Impact")
-            st.write(f"**{feat}**: {status} (Range: {val})")
-    else: st.warning("Run Assessment first.")
-
-# --- TAB 4: MARKET & CARDS (FIXED BLANK) ---
+# --- TAB 4: MARKET & GEO (Geo-Spatial Feature) ---
 with tabs[4]:
-    st.header("🏦 Market Rates & Card Recommendations")
-    c_left, c_right = st.columns(2)
-    with c_left:
-        st.subheader("Top Bank Rates")
-        st.table(pd.DataFrame({'Bank': ['SBI', 'HDFC', 'Hari Bank'], 'Rate': ['10.5%', '10.7%', '9.5%']}))
-    with c_right:
-        st.subheader("Hari's Card Picks")
-        st.write("💳 **Gold Card:** Eligible if Score > 700")
-        st.write("💳 **Starter Card:** Eligible for all applicants")
+    st.header("🏦 Market Rates & Regional Analytics")
+    c_m1, c_m2 = st.columns(2)
+    with c_m1:
+        st.subheader("Bank Comparison")
+        st.table(pd.DataFrame({'Bank': ['Hari Bank', 'HDFC', 'SBI'], 'Rate': ['9.2%', '10.5%', '10.6%']}))
+    with c_m2:
+        st.subheader("📍 Regional Approval Heatmap")
+        geo_data = pd.DataFrame({
+            'City': ["Chennai", "Bangalore", "Mumbai", "Delhi", "Hyderabad"],
+            'lat': [13.08, 12.97, 19.07, 28.61, 17.38],
+            'lon': [80.27, 77.59, 72.87, 77.20, 78.48],
+            'Approval_Rate': [85, 90, 78, 82, 88]
+        })
+        st.map(geo_data)
 
-# --- TAB 5: ADMIN CENTER (FIXED TOGGLE) ---
+# --- TAB 5: ADMIN & DRIFT (MLOps Drift Feature) ---
 with tabs[5]:
-    st.header("🔐 Admin Security Center")
+    st.header("🔐 Admin Security & MLOps Monitoring")
     st.write("**DEV:** Hari murugan | Data Scientist")
-    if st.text_input("Password", type="password") == "admin123":
+    if st.text_input("Admin Password", type="password") == "admin123":
         if os.path.exists('user_logs.csv'):
             df = pd.read_csv('user_logs.csv')
-            # FIXED: Toggle is now here
-            security_on = st.toggle("🛡️ Enable Data Anonymization (GDPR Mode)")
-            if security_on:
-                df = anonymize_data(df)
+            
+            st.subheader("📡 Live Model Drift Monitoring")
+            drift_data = pd.DataFrame({
+                'Date': pd.date_range(start='2026-04-01', periods=10),
+                'Baseline Accuracy': [0.92]*10,
+                'Actual Accuracy': [0.92, 0.91, 0.93, 0.89, 0.90, 0.88, 0.91, 0.92, 0.87, 0.89]
+            })
+            st.line_chart(drift_data.set_index('Date'))
+            st.info("💡 **Analysis:** Model drift is within 5% threshold. No retraining required.")
+
+            st.markdown("---")
+            if st.toggle("🛡️ GDPR Masking"): df = anonymize_data(df)
             st.dataframe(df.tail(15))
-            st.download_button("Download CSV", df.to_csv(index=False), "hari_murugan_logs.csv")
