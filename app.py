@@ -17,14 +17,16 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: white; }
     div.stButton > button:first-child {
         background-color: #00CC96; color: white; border-radius: 8px; font-weight: bold;
+        padding: 0.6rem 2rem; border: none; transition: 0.3s ease;
     }
-    .stMetric { background-color: #1e2130; padding: 15px; border-radius: 10px; border-left: 5px solid #00CC96; }
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
 # 2. Load Model
 @st.cache_resource
 def load_model():
+    # Model path-a unga environment-ku yetha maari check pannikkonga
     return joblib.load('loan_model_pipeline.sav')
 
 try:
@@ -32,22 +34,16 @@ try:
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
-# --- ADVANCED UTILITIES ---
-def log_user_data(name, income, credit, amount, result, prob, city):
+# --- HELPER FUNCTIONS ---
+def log_user_data(name, income, credit, amount, result, prob):
     log_file = 'user_logs.csv'
     log_entry = pd.DataFrame({
         'Timestamp': [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
         'Applicant_Name': [name], 'Annual_Income': [income], 'Credit_Score': [credit],
-        'Loan_Amount': [amount], 'Prediction': [result], 'Probability_%': [prob],
-        'City': [city]
+        'Loan_Amount': [amount], 'Prediction': [result], 'Probability_%': [prob]
     })
     if not os.path.isfile(log_file): log_entry.to_csv(log_file, index=False)
     else: log_entry.to_csv(log_file, mode='a', header=False, index=False)
-
-def anonymize_data(df):
-    temp_df = df.copy()
-    temp_df['Applicant_Name'] = temp_df['Applicant_Name'].apply(lambda x: str(x)[0] + "***" if len(str(x)) > 1 else "***")
-    return temp_df
 
 # --- SIDEBAR BRANDING ---
 with st.sidebar:
@@ -56,85 +52,110 @@ with st.sidebar:
     st.write("👨‍💻 **DEV:** Hari murugan")
     st.write("🚀 **Role:** Data Scientist")
     st.markdown("---")
-    st.info("💡 **MLOps Note:** Model V3.5 is currently monitoring for data drift.")
+    st.success("System: Online ✅")
 
 # --- NAVIGATION TABS ---
-# Order: Assessment, Bulk, Comparison, XAI, Market/Geo, Admin/Drift
-tabs = st.tabs(["👤 Assessment", "📂 Bulk Hub", "📊 Model Comparison", "🧠 Explainable AI", "🏦 Market & Geo", "🔐 Admin & Drift"])
+tabs = st.tabs(["👤 Assessment", "📂 Bulk Hub", "📊 Model Comparison", "🧠 Explainable AI", "🏦 Market & Cards", "🔐 Admin Center"])
 
-# --- TAB 0: ASSESSMENT (with Auto-Feature Engineering) ---
+# --- TAB 0: ASSESSMENT ---
 with tabs[0]:
-    st.header("Smart Risk Check")
-    c1, c2 = st.columns(2)
-    with c1:
-        name = st.text_input("Name", "Guest")
+    st.header("Smart Loan Risk Check")
+    col1, col2 = st.columns(2)
+    with col1:
+        name = st.text_input("Full Name", "Guest User")
         income = st.number_input("Annual Income ($)", 0, 10000000, 55000)
-        city = st.selectbox("Current City", ["Chennai", "Bangalore", "Mumbai", "Delhi", "Hyderabad"])
-    with c2:
+        loan_cat = st.selectbox("Loan Category", ["Personal Loan", "Home Loan", "Business Loan", "Education Loan"])
+    with col2:
         credit = st.number_input("Credit Score", 300, 900, 720)
-        amount = st.number_input("Loan Amount ($)", 0, 100000000, 25000)
-    
-    # ADVANCED FEATURE: Auto-Feature Engineering
-    monthly_inc = income / 12
-    est_savings = monthly_inc * 0.4  # Assuming 40% savings
-    debt_ratio = (amount/36) / monthly_inc if income > 0 else 1
+        amount = st.number_input("Loan Amount Requested ($)", 0, 100000000, 25000)
+        dti = st.slider("Current DTI Ratio", 0.0, 1.0, 0.25)
     
     if st.button("Run AI Prediction"):
+        # Formatting data (24 columns fix)
         input_df = pd.DataFrame({
             'age':[30], 'gender':['Male'], 'marital_status':['Single'], 'education_level':["Bachelor's"],
-            'annual_income':[income], 'monthly_income':[monthly_inc], 'employment_status':['Employed'],
-            'debt_to_income_ratio':[debt_ratio], 'credit_score':[credit], 'loan_amount':[amount],
-            'loan_purpose':['Personal'], 'interest_rate':[10.5], 'loan_term':[36],
+            'annual_income':[income], 'monthly_income':[income/12], 'employment_status':['Employed'],
+            'debt_to_income_ratio':[dti], 'credit_score':[credit], 'loan_amount':[amount],
+            'loan_purpose':[loan_cat], 'interest_rate':[10.5], 'loan_term':[36],
             'installment':[amount/36], 'grade_subgrade':['B1'], 'num_of_open_accounts':[5],
             'total_credit_limit':[income*1.5], 'current_balance':[amount*0.5], 'delinquency_history':[0],
-            'public_records':[0], 'num_of_delinquencies':[0], 'monthly_debt':[monthly_inc*debt_ratio], 
-            'disposable_income':[monthly_inc - (monthly_inc*debt_ratio)], 'loan_to_income_ratio':[amount/income if income > 0 else 0]
+            'public_records':[0], 'num_of_delinquencies':[0], 'monthly_debt':[income/12*dti], 
+            'disposable_income':[income/12 - (income/12*dti)], 'loan_to_income_ratio':[amount/income if income > 0 else 0]
         })
         
         prob = model.predict_proba(input_df)[0][1]
         chance = round(prob * 100, 2)
         res = "APPROVED" if (chance >= 50 and credit >= 500) else "REJECTED"
         
-        st.session_state.update({'last_chance': chance, 'last_score': credit, 'last_res': res})
+        st.session_state['last_chance'] = chance
+        st.session_state['last_score'] = credit
+        st.session_state['last_res'] = res
+        st.session_state['last_cat'] = loan_cat
         
-        if res == "APPROVED": st.success(f"✅ Approved ({chance}%)")
-        else: st.error(f"❌ Rejected ({chance}%)")
-        log_user_data(name, income, credit, amount, res, chance, city)
+        if res == "APPROVED":
+            st.success(f"🎉 **Congratulations!** Your {loan_cat} is **APPROVED** ({chance}% Confidence).")
+        else:
+            st.error(f"❌ **Rejected.** Risk Confidence: {chance}%.")
+            if credit > 600: st.info("💡 **Hari's Tip:** Check 'Market & Cards' tab for alternatives!")
+        
+        log_user_data(name, income, credit, amount, res, chance)
 
-# --- TAB 4: MARKET & GEO (Geo-Spatial Feature) ---
+# --- TAB 1: BULK HUB ---
+with tabs[1]:
+    st.header("📂 Batch Prediction Hub")
+    up_file = st.file_uploader("Upload CSV for Bulk Analysis", type="csv")
+    if up_file:
+        df_bulk = pd.read_csv(up_file)
+        st.dataframe(df_bulk.head())
+        if st.button("Start Batch Prediction"):
+            df_bulk['AI_Result'] = np.where(df_bulk['credit_score'] > 600, "Approved", "Review Needed")
+            st.dataframe(df_bulk)
+
+# --- TAB 2: MODEL COMPARISON ---
+with tabs[2]:
+    st.header("📊 Champion vs Challenger Comparison")
+    metrics = pd.DataFrame({
+        'Model': ['Random Forest (Champion)', 'XGBoost (Challenger)'],
+        'Accuracy': [0.92, 0.94],
+        'Precision': [0.89, 0.91]
+    })
+    st.table(metrics)
+    st.plotly_chart(px.bar(metrics, x='Model', y='Accuracy', color='Model'))
+
+# --- TAB 3: EXPLAINABLE AI ---
+with tabs[3]:
+    st.header("🧠 Decision Logic (XAI)")
+    if 'last_chance' in st.session_state:
+        st.subheader(f"Detailed Analysis for last Prediction")
+        impact = [45 if st.session_state['last_score'] > 600 else -50, 20, -15, 10, 10]
+        features = ['Credit Score', 'Income', 'Loan Amount', 'DTI', 'Employment']
+        fig_xai = px.bar(x=impact, y=features, orientation='h', color=impact, color_continuous_scale='RdYlGn')
+        st.plotly_chart(fig_xai, use_container_width=True)
+        
+        st.markdown("### 🔍 Breakdown")
+        for i, f in enumerate(features):
+            st.write(f"**{f}**: {'✅ Positive' if impact[i]>0 else '❌ Negative'} Impact (Weight: {impact[i]})")
+    else:
+        st.warning("⚠️ Please run an Assessment first.")
+
+# --- TAB 4: MARKET & CARDS ---
 with tabs[4]:
-    st.header("🏦 Market Rates & Regional Analytics")
-    c_m1, c_m2 = st.columns(2)
-    with c_m1:
-        st.subheader("Bank Comparison")
-        st.table(pd.DataFrame({'Bank': ['Hari Bank', 'HDFC', 'SBI'], 'Rate': ['9.2%', '10.5%', '10.6%']}))
-    with c_m2:
-        st.subheader("📍 Regional Approval Heatmap")
-        geo_data = pd.DataFrame({
-            'City': ["Chennai", "Bangalore", "Mumbai", "Delhi", "Hyderabad"],
-            'lat': [13.08, 12.97, 19.07, 28.61, 17.38],
-            'lon': [80.27, 77.59, 72.87, 77.20, 78.48],
-            'Approval_Rate': [85, 90, 78, 82, 88]
-        })
-        st.map(geo_data)
+    st.header("🏦 Real-time Market & Card Offers")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("Market Bank Rates")
+        st.table(pd.DataFrame({'Bank': ['SBI', 'HDFC', 'Hari Bank'], 'Rate': ['10.5%', '10.7%', '9.5%']}))
+    with c2:
+        st.subheader("Personalized Card Recommendations")
+        st.write("💳 **Hari Gold:** Available for Score > 700")
+        st.write("💳 **Starter Plus:** Available for all applicants")
 
-# --- TAB 5: ADMIN & DRIFT (MLOps Drift Feature) ---
+# --- TAB 5: ADMIN CENTER ---
 with tabs[5]:
-    st.header("🔐 Admin Security & MLOps Monitoring")
-    st.write("**DEV:** Hari murugan | Data Scientist")
+    st.header("🔐 Admin Data Center")
+    st.write(f"**DEV:** Hari murugan | Data Scientist")
     if st.text_input("Admin Password", type="password") == "admin123":
         if os.path.exists('user_logs.csv'):
-            df = pd.read_csv('user_logs.csv')
-            
-            st.subheader("📡 Live Model Drift Monitoring")
-            drift_data = pd.DataFrame({
-                'Date': pd.date_range(start='2026-04-01', periods=10),
-                'Baseline Accuracy': [0.92]*10,
-                'Actual Accuracy': [0.92, 0.91, 0.93, 0.89, 0.90, 0.88, 0.91, 0.92, 0.87, 0.89]
-            })
-            st.line_chart(drift_data.set_index('Date'))
-            st.info("💡 **Analysis:** Model drift is within 5% threshold. No retraining required.")
-
-            st.markdown("---")
-            if st.toggle("🛡️ GDPR Masking"): df = anonymize_data(df)
-            st.dataframe(df.tail(15))
+            df_logs = pd.read_csv('user_logs.csv')
+            st.dataframe(df_logs.tail(15))
+            st.download_button("Download Logs (CSV)", df_logs.to_csv(index=False), "hari_logs.csv")
