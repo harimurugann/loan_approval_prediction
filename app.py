@@ -139,4 +139,22 @@ with tab3:
         with col_b:
             st.subheader("What-If Simulation")
             sim_score = st.slider("Adjust Credit Score for Simulation", 300, 900, int(st.session_state['last_score']))
-            st.
+            st.metric("Simulated Score", sim_score, delta=sim_score - st.session_state['last_score'])
+            st.write("Higher scores significantly increase approval confidence in the model.")
+    else:
+        st.warning("⚠️ No data available. Please run an assessment in Tab 1 first.")
+
+# --- TAB 4: ADMIN CENTER ---
+with tab4:
+    st.header("🔐 Admin Data Management")
+    st.write(f"**DEV:** Hari murugan | Data Scientist")
+    if st.text_input("Enter Admin Password", type="password") == "admin123":
+        if os.path.exists('user_logs.csv'):
+            df_logs = pd.read_csv('user_logs.csv')
+            st.metric("Total System Logs", len(df_logs))
+            st.dataframe(df_logs, use_container_width=True)
+            if st.button("🗑️ Clear All Logs"):
+                os.remove('user_logs.csv')
+                st.rerun()
+        else:
+            st.info("No logs found in the system.")
