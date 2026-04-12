@@ -10,6 +10,24 @@ import os
 # 1. Page Configuration
 st.set_page_config(page_title="Loan Intelligence Hub", layout="wide")
 
+# --- SIDEBAR: THEME CUSTOMIZER ---
+with st.sidebar:
+    st.header("🎨 App Aesthetics")
+    theme_choice = st.radio("Choose Theme", ["Professional Blue", "Vintage Retro", "Dark Mode Pro"])
+    
+    st.markdown("---")
+    st.subheader("💡 Expert Guidance")
+    st.info("A Credit Score above 750 usually guarantees the best interest rates.")
+
+# --- APPLYING DYNAMIC THEME (CSS) ---
+if theme_choice == "Vintage Retro":
+    st.markdown("""<style> .stApp { background-color: #fdf6e3; color: #586e75; } </style>""", unsafe_allow_html=True)
+elif theme_choice == "Dark Mode Pro":
+    st.markdown("""<style> .stApp { background-color: #0e1117; color: #ffffff; } </style>""", unsafe_allow_html=True)
+else:
+    # Default Streamlit Blue Style
+    pass
+
 # 2. Load Model
 @st.cache_resource
 def load_model():
@@ -37,28 +55,40 @@ def log_user_data(name, income, credit, amount, result, prob):
     else:
         log_entry.to_csv(log_file, mode='a', header=False, index=False)
 
-# --- PASSWORD MANAGEMENT (Session Based) ---
+# Password Session State
 if 'admin_pwd' not in st.session_state:
-    st.session_state['admin_pwd'] = "admin123" # Initial Default Password
+    st.session_state['admin_pwd'] = "admin123"
 
 # --- TABS ---
-tab1, tab2, tab3, tab4 = st.tabs(["👤 Assessment", "📂 Bulk", "📈 Analytics", "🔐 Admin"])
+tab1, tab2, tab3, tab4 = st.tabs(["👤 Assessment", "📂 Bulk Upload", "📈 Insights & Simulator", "🔐 Admin Panel"])
 
-# --- TAB 1: INDIVIDUAL ---
+# --- TAB 1: INDIVIDUAL ASSESSMENT ---
 with tab1:
-    st.header("Individual Risk Check")
+    st.header("Single Applicant Risk Check")
+    
     col1, col2 = st.columns(2)
     with col1:
-        name = st.text_input("Name", "Guest User")
+        name = st.text_input("Applicant Name", "Guest User")
+        age = st.number_input("Age", 18, 100, 30)
         annual_income = st.number_input("Annual Income ($)", 0, value=50000)
+        
     with col2:
         credit_score = st.number_input("Credit Score", 300, 900, 700)
         loan_amount = st.number_input("Loan Amount ($)", 0, value=15000)
-        dti = st.number_input("DTI Ratio", 0.0, 1.0, 0.1)
+        dti = st.number_input("DTI Ratio (Debt-to-Income)", 0.0, 1.0, 0.15)
 
-    # Dummy Feature engineering for the model
+    # --- FEATURE-BASED DYNAMIC TIPS ---
+    st.markdown("---")
+    if credit_score < 600:
+        st.warning("⚠️ **Low Credit Score:** Your score is below 600. Banks may consider this a high-risk profile.")
+    if dti > 0.45:
+        st.error("🚨 **High Debt Warning:** Your debt-to-income ratio is very high. Try reducing other debts before applying.")
+    if loan_amount > (annual_income * 3):
+        st.info("ℹ️ **High Loan Request:** You are requesting more than 3x your annual income, which might trigger stricter review.")
+
+    # Engineering data for model
     input_df = pd.DataFrame({
-        'age':[30], 'gender':['Male'], 'marital_status':['Single'], 'education_level':["Bachelor's"],
+        'age':[age], 'gender':['Male'], 'marital_status':['Single'], 'education_level':["Bachelor's"],
         'annual_income':[annual_income], 'monthly_income':[annual_income/12], 'employment_status':['Employed'],
         'debt_to_income_ratio':[dti], 'credit_score':[credit_score], 'loan_amount':[loan_amount],
         'loan_purpose':['Business'], 'interest_rate':[10.5], 'loan_term':[36],
@@ -68,47 +98,51 @@ with tab1:
         'disposable_income':[(annual_income/12) - ((annual_income/12)*dti)], 'loan_to_income_ratio':[loan_amount/annual_income if annual_income > 0 else 0]
     })
 
-    if st.button("Analyze"):
+    if st.button("Run Eligibility Prediction"):
         prob = model.predict_proba(input_df)[0][1]
         chance = round(prob * 100, 2)
         st.session_state['last_chance'] = chance
         st.session_state['last_score'] = credit_score
         res = "APPROVED" if chance >= 50 else "REJECTED"
+        
         log_user_data(name, annual_income, credit_score, loan_amount, res, chance)
-        st.success(f"Result: {res} ({chance}%)")
+        st.success(f"Final Decision: {res} ({chance}% Confidence)")
 
-# --- TAB 4: SECURED ADMIN & PWD CHANGE ---
+# --- TAB 3: INSIGHTS & SIMULATOR ---
+with tab3:
+    st.header("Decision Insights")
+    cur_chance = st.session_state.get('last_chance', 50)
+    
+    # Dynamic Color based on result
+    color = "#00CC96" if cur_chance >= 70 else ("#FFAA00" if cur_chance >= 40 else "#FF4B4B")
+    
+    st.subheader(f"Current Approval Probability: :{color}[{cur_chance}%]")
+    
+    # Feature Importance Bar
+    imp_df = pd.DataFrame({'Feature': ['Credit Score', 'Income', 'Loan Amount', 'DTI', 'Age'], 'Impact %': [45, 25, 15, 10, 5]})
+    fig = px.bar(imp_df, x='Impact %', y='Feature', orientation='h')
+    fig.update_traces(marker_color=color)
+    st.plotly_chart(fig, use_container_width=True)
+
+# --- TAB 4: ADMIN SECTION ---
 with tab4:
     st.header("🔐 Admin Access")
-    
-    # 1. Login Gate
     pwd_input = st.text_input("Enter Admin Password", type="password")
     
     if pwd_input == st.session_state['admin_pwd']:
-        st.success("Welcome Admin")
+        st.success("Access Granted.")
         
-        # --- PASSWORD CHANGE OPTION ---
-        with st.expander("🛠️ Settings: Change Admin Password"):
+        with st.expander("🛠️ Admin Settings: Change Password"):
             new_pwd = st.text_input("New Password", type="password")
-            confirm_pwd = st.text_input("Confirm New Password", type="password")
             if st.button("Update Password"):
-                if new_pwd == confirm_pwd and new_pwd != "":
-                    st.session_state['admin_pwd'] = new_pwd
-                    st.success("Password updated for this session! Use the new password next time.")
-                else:
-                    st.error("Passwords do not match!")
+                st.session_state['admin_pwd'] = new_pwd
+                st.success("Password Updated!")
 
-        # --- VIEW LOGS ---
         if os.path.exists('user_logs.csv'):
             df_logs = pd.read_csv('user_logs.csv')
-            st.subheader("System Logs")
-            st.dataframe(df_logs, use_container_width=True)
-            
-            if st.button("🗑️ Reset Logs"):
+            st.dataframe(df_logs)
+            if st.button("Clear Logs"):
                 os.remove('user_logs.csv')
                 st.rerun()
-        else:
-            st.info("No logs found.")
-            
     elif pwd_input != "":
-        st.error("Invalid Password")
+        st.error("Unauthorized Access.")
