@@ -12,21 +12,20 @@ st.set_page_config(page_title="Loan Intelligence Hub", layout="wide")
 
 # --- SIDEBAR: THEME CUSTOMIZER ---
 with st.sidebar:
-    st.header("🎨 App Aesthetics")
-    theme_choice = st.radio("Choose Theme", ["Professional Blue", "Vintage Retro", "Dark Mode Pro"])
+    st.header("🎨 App Theme")
+    # Vintage Retro-va remove pannittu Professional matrum Dark Mode mattum vachurukkom
+    theme_choice = st.radio("Choose Theme", ["Professional Blue", "Dark Mode Pro"])
     
     st.markdown("---")
     st.subheader("💡 Expert Guidance")
     st.info("A Credit Score above 750 usually guarantees the best interest rates.")
 
 # --- APPLYING DYNAMIC THEME (CSS) ---
-if theme_choice == "Vintage Retro":
-    st.markdown("""<style> .stApp { background-color: #fdf6e3; color: #586e75; } </style>""", unsafe_allow_html=True)
-elif theme_choice == "Dark Mode Pro":
+if theme_choice == "Dark Mode Pro":
     st.markdown("""<style> .stApp { background-color: #0e1117; color: #ffffff; } </style>""", unsafe_allow_html=True)
 else:
-    # Default Streamlit Blue Style
-    pass
+    # Default Professional Blue Style
+    st.markdown("""<style> .stApp { background-color: #f0f2f6; color: #1c2b46; } </style>""", unsafe_allow_html=True)
 
 # 2. Load Model
 @st.cache_resource
@@ -75,18 +74,16 @@ with tab1:
     with col2:
         credit_score = st.number_input("Credit Score", 300, 900, 700)
         loan_amount = st.number_input("Loan Amount ($)", 0, value=15000)
-        dti = st.number_input("DTI Ratio (Debt-to-Income)", 0.0, 1.0, 0.15)
+        dti = st.number_input("DTI Ratio", 0.0, 1.0, 0.15)
 
     # --- FEATURE-BASED DYNAMIC TIPS ---
     st.markdown("---")
     if credit_score < 600:
-        st.warning("⚠️ **Low Credit Score:** Your score is below 600. Banks may consider this a high-risk profile.")
+        st.warning("⚠️ **Low Credit Score:** High risk for rejection or high interest rates.")
     if dti > 0.45:
-        st.error("🚨 **High Debt Warning:** Your debt-to-income ratio is very high. Try reducing other debts before applying.")
-    if loan_amount > (annual_income * 3):
-        st.info("ℹ️ **High Loan Request:** You are requesting more than 3x your annual income, which might trigger stricter review.")
+        st.error("🚨 **High Debt Warning:** Debt ratio exceeds recommended limits.")
 
-    # Engineering data for model
+    # Model Data Preparation
     input_df = pd.DataFrame({
         'age':[age], 'gender':['Male'], 'marital_status':['Single'], 'education_level':["Bachelor's"],
         'annual_income':[annual_income], 'monthly_income':[annual_income/12], 'employment_status':['Employed'],
@@ -98,51 +95,7 @@ with tab1:
         'disposable_income':[(annual_income/12) - ((annual_income/12)*dti)], 'loan_to_income_ratio':[loan_amount/annual_income if annual_income > 0 else 0]
     })
 
-    if st.button("Run Eligibility Prediction"):
+    if st.button("Analyze Profile"):
         prob = model.predict_proba(input_df)[0][1]
-        chance = round(prob * 100, 2)
-        st.session_state['last_chance'] = chance
-        st.session_state['last_score'] = credit_score
-        res = "APPROVED" if chance >= 50 else "REJECTED"
+        chance = round
         
-        log_user_data(name, annual_income, credit_score, loan_amount, res, chance)
-        st.success(f"Final Decision: {res} ({chance}% Confidence)")
-
-# --- TAB 3: INSIGHTS & SIMULATOR ---
-with tab3:
-    st.header("Decision Insights")
-    cur_chance = st.session_state.get('last_chance', 50)
-    
-    # Dynamic Color based on result
-    color = "#00CC96" if cur_chance >= 70 else ("#FFAA00" if cur_chance >= 40 else "#FF4B4B")
-    
-    st.subheader(f"Current Approval Probability: :{color}[{cur_chance}%]")
-    
-    # Feature Importance Bar
-    imp_df = pd.DataFrame({'Feature': ['Credit Score', 'Income', 'Loan Amount', 'DTI', 'Age'], 'Impact %': [45, 25, 15, 10, 5]})
-    fig = px.bar(imp_df, x='Impact %', y='Feature', orientation='h')
-    fig.update_traces(marker_color=color)
-    st.plotly_chart(fig, use_container_width=True)
-
-# --- TAB 4: ADMIN SECTION ---
-with tab4:
-    st.header("🔐 Admin Access")
-    pwd_input = st.text_input("Enter Admin Password", type="password")
-    
-    if pwd_input == st.session_state['admin_pwd']:
-        st.success("Access Granted.")
-        
-        with st.expander("🛠️ Admin Settings: Change Password"):
-            new_pwd = st.text_input("New Password", type="password")
-            if st.button("Update Password"):
-                st.session_state['admin_pwd'] = new_pwd
-                st.success("Password Updated!")
-
-        if os.path.exists('user_logs.csv'):
-            df_logs = pd.read_csv('user_logs.csv')
-            st.dataframe(df_logs)
-            if st.button("Clear Logs"):
-                os.remove('user_logs.csv')
-                st.rerun()
-    elif pwd_input != "":
-        st.error("Unauthorized Access.")
