@@ -152,8 +152,3 @@ with tabs[6]:
             st.download_button("Download Logs", logs.to_csv(index=False), "logs.csv")
         else: st.warning("No logs found.")
 
-# --- TAB 7: FUTURE ROADMAP ---
-with tabs[7]:
-    st.header("🚀 Future Roadmap")
-    st.write("1. NLP Sentiment Analysis for applicant behavior.")
-    st.write("2. Real-time API integration with Credit Bureaus.")
