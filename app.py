@@ -35,7 +35,7 @@ def log_data(name, income, credit, amount, res, prob):
     else: log.to_csv(file, mode='a', header=False, index=False)
 
 # --- NAVIGATION TABS ---
-tabs = st.tabs(["👤 Assessment", "📂 Bulk Hub", "🗺️ Live Geo Mapping", "📈 Model Drift", "🧠 Explainable AI", "🏦 Market & Cards", "🔐 Admin Center", "🚀 Future Roadmap"])
+tabs = st.tabs(["👤 Assessment", "📂 Bulk Hub", "🗺️ Live Geo Mapping", "📈 Model Drift", "🧠 Explainable AI", "🏦 Market & Cards", "🔐 Admin Center"])
 
 # --- TAB 0: ASSESSMENT ---
 with tabs[0]:
