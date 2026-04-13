@@ -106,3 +106,7 @@ with tabs[6]:
     if st.text_input("Password", type="password") == "admin123":
         if os.path.exists('user_logs_production.csv'):
             st.dataframe(pd.read_csv('user_logs_production.csv').tail(10))
+
+    with tabs[7]: # Index 7 means 8th tab
+    st.header("🚀 Future Roadmap")
+    st.write("Developing: NLP Sentiment Analysis for Loan Applicants.")
