@@ -95,9 +95,3 @@ with tabs[6]:
             st.warning("No logs found. Run an assessment to generate data.")
     elif password != "":
         st.error("Incorrect Password. Access Denied.")
-
-# --- TAB 7: ROADMAP ---
-with tabs[7]:
-    st.header("🚀 Future Roadmap")
-    st.write("1. NLP Sentiment Analysis")
-    st.write("2. Real-time API Integration")
