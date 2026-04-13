@@ -39,7 +39,7 @@ def log_user_data(name, income, credit, amount, result, prob):
 tabs = st.tabs([
     "👤 Assessment", "📂 Bulk Hub", "🗺️ Live Geo Mapping", 
     "📈 Model Drift", "🧠 Explainable AI", "🏦 Market & Cards", 
-    "🔐 Admin Center", "🚀 Future Roadmap"
+    "🔐 Admin Center"
 ])
 
 # --- TAB 0: ASSESSMENT ---
@@ -113,8 +113,3 @@ with tabs[6]:
             st.download_button("Export Logs", df_admin.to_csv(index=False), "logs.csv")
     elif pwd != "": st.error("Wrong Password")
 
-# --- TAB 7: FUTURE ROADMAP ---
-with tabs[7]:
-    st.header("🚀 Future Roadmap")
-    st.write("- NLP Sentiment Analysis Integration")
-    st.write("- Real-time API connections to Banks")
