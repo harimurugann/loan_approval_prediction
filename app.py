@@ -3,7 +3,6 @@ import pandas as pd
 import joblib
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
 import datetime
 import os
 
@@ -31,10 +30,8 @@ try:
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
-# --- ADVANCED UTILITIES ---
-
+# --- UTILITIES ---
 def detect_fraud(income, amount, credit):
-    # Logic: If loan amount is 10x of income or high amount for low credit
     if amount > (income * 10) or (credit < 400 and amount > 500000):
         return True
     return False
@@ -53,34 +50,31 @@ def log_user_data(name, income, credit, amount, result, prob, lat, lon):
 # --- SIDEBAR ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=80)
-    st.title("Admin Dashboard")
+    st.title("Admin Control")
     st.write("👨‍💻 **DEV:** Hari murugan")
     st.write("🚀 **Role:** Data Scientist")
     st.markdown("---")
-    st.success("System: Online ✅")
+    st.success("System: Active ✅")
 
 # --- NAVIGATION TABS ---
-tabs = st.tabs(["👤 Assessment", "📂 Bulk Hub", "🗺️ Live Geo Mapping", "📊 Model Drift", "🧠 Explainable AI", "🏦 Market & Cards", "🔐 Admin Center"])
+tabs = st.tabs([
+    "👤 Assessment", "📂 Bulk Hub", "🗺️ Live Geo Mapping", 
+    "📈 Model Drift", "🧠 Explainable AI", "🏦 Market & Cards", "🔐 Admin Center"
+])
 
-# --- TAB 0: ASSESSMENT (With Fraud Detection) ---
+# --- TAB 0: ASSESSMENT (With Threshold Tuning) ---
 with tabs[0]:
     st.header("Smart Loan Risk Check")
     c1, c2 = st.columns(2)
     with c1:
-        name = st.text_input("Full Name", "Guest")
+        name = st.text_input("Full Name", "Guest User")
         income = st.number_input("Annual Income ($)", 0, 10000000, 55000)
     with c2:
         credit = st.number_input("Credit Score", 300, 900, 720)
         amount = st.number_input("Loan Amount Requested ($)", 0, 100000000, 25000)
     
-    if st.button("Run Prediction"):
-        # 🛡️ Fraud Check First
+    if st.button("Analyze Eligibility"):
         is_fraud = detect_fraud(income, amount, credit)
-        
-        if is_fraud:
-            st.warning("🚨 **Fraud Alert:** Abnormal financial pattern detected. Application flagged for manual review.")
-        
-        # 24 Column Formatting
         input_df = pd.DataFrame({
             'age':[30], 'gender':['Male'], 'marital_status':['Single'], 'education_level':["Bachelor's"],
             'annual_income':[income], 'monthly_income':[income/12], 'employment_status':['Employed'],
@@ -98,36 +92,57 @@ with tabs[0]:
         
         st.session_state['last_chance'] = chance
         st.session_state['last_score'] = credit
-        st.session_state['last_res'] = res
         
-        if res == "APPROVED": st.success(f"🎉 Approved ({chance}%)")
-        else: st.error(f"❌ Rejected ({chance}%)")
+        # --- REFINE LOGIC INTEGRATION ---
+        if is_fraud:
+            st.warning("🚨 **Fraud Alert:** Financial pattern flagged for manual review.")
         
-        log_user_data(name, income, credit, amount, res, chance, 13.0827, 80.2707)
+        if res == "APPROVED":
+            if chance >= 75:
+                st.balloons()
+                st.success(f"✅ **High Confidence Approval:** {chance}% - Low risk profile.")
+            else:
+                st.warning(f"⚠️ **Moderate Risk Approval:** {chance}% - Eligibility is borderline. Manual verification recommended.")
+        else:
+            st.error(f"❌ **Rejected:** {chance}% - High risk profile detected.")
+        
+        log_user_data(name, income, credit, amount, res, chance, 13.08, 80.27)
 
-# --- TAB 3: MODEL DRIFT MONITORING (NEW!) ---
+# --- TAB 1: BULK HUB ---
+with tabs[1]:
+    st.header("📂 Bulk Processing")
+    st.info("Upload CSV for batch analysis.")
+
+# --- TAB 2: LIVE GEO MAPPING ---
+with tabs[2]:
+    st.header("🗺️ Applicant Geospatial View")
+    if os.path.exists('user_logs_production.csv'):
+        df_geo = pd.read_csv('user_logs_production.csv')
+        st.map(df_geo[['lat', 'lon']])
+    else: st.info("Run assessment to see mapping.")
+
+# --- TAB 3: MODEL DRIFT ---
 with tabs[3]:
-    st.header("📈 Model Drift & Health Monitor")
-    st.write("Tracking model accuracy over real-world production data.")
-    
-    drift_data = pd.DataFrame({
-        'Date': pd.date_range(start='2026-04-01', periods=10),
-        'Accuracy': [0.94, 0.94, 0.93, 0.94, 0.91, 0.92, 0.90, 0.89, 0.91, 0.92],
-        'Data_Drift': [0.01, 0.02, 0.01, 0.03, 0.05, 0.04, 0.07, 0.06, 0.05, 0.04]
-    })
-    
-    fig_drift = px.line(drift_data, x='Date', y='Accuracy', title="Performance Stability Over Time")
-    st.plotly_chart(fig_drift, use_container_width=True)
-    st.info("💡 Model is currently **Stable**. No retraining required for 24 hours.")
+    st.header("📉 Model Stability Monitor")
+    drift_df = pd.DataFrame({'Day': range(1,6), 'Accuracy': [0.94, 0.93, 0.94, 0.92, 0.93]})
+    st.line_chart(drift_df.set_index('Day'))
 
-# --- TAB 6: ADMIN (RESTORING ALL LOGIC) ---
+# --- TAB 4: EXPLAINABLE AI ---
+with tabs[4]:
+    st.header("🧠 Decision Logic (XAI)")
+    if 'last_chance' in st.session_state:
+        impact = [45 if st.session_state['last_score'] > 600 else -50, 25, -15, 10, 10]
+        st.plotly_chart(px.bar(x=impact, y=['Credit Score', 'Income', 'Loan', 'DTI', 'Age'], orientation='h', color=impact))
+    else: st.warning("Run Assessment first.")
+
+# --- TAB 5: MARKET & CARDS ---
+with tabs[5]:
+    st.header("🏦 Market Rates")
+    st.table(pd.DataFrame({'Bank': ['SBI', 'HDFC', 'Hari Bank'], 'Rate': ['10.5%', '10.7%', '9.2%']}))
+
+# --- TAB 6: ADMIN CENTER ---
 with tabs[6]:
-    st.header("🔐 Admin Security Center")
-    if st.text_input("Enter Admin Password", type="password") == "admin123":
+    st.header("🔐 Secure Audit Logs")
+    if st.text_input("Password", type="password") == "admin123":
         if os.path.exists('user_logs_production.csv'):
-            df = pd.read_csv('user_logs_production.csv')
-            st.metric("Total API Calls", len(df))
-            st.dataframe(df.tail(15))
-            st.download_button("Download Audit Logs", df.to_csv(index=False), "hari_final_logs.csv")
-
-# ... (Tab 1, 2, 4, 5 logic stays the same as previous stable version)
+            st.dataframe(pd.read_csv('user_logs_production.csv').tail(10))
