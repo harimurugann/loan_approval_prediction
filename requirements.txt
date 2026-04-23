@@ -1,8 +1,0 @@
-plotly
-fpdf
-pandas
-numpy
-scikit-learn
-joblib
-streamlit
-datetime
