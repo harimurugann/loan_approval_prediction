@@ -87,12 +87,13 @@ def main():
         "🚨 FRAUD & ANOMALY DETECT",
         "📉 MODEL DRIFT MONITOR",
         "📍 GEOSPATIAL RISK MAP",
+        "🌪️ STRESS TESTING ENGINE",
         "🗺️ CREDIT ROADMAP",
         "🔒 ADMIN GATEWAY"
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.8 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.9 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -101,7 +102,7 @@ def main():
         st.markdown('<p class="status-text">🟢 STATUS: ONLINE<br>Engine Connected</p>', unsafe_allow_html=True)
 
     # ==========================================
-    # 1. SYSTEM DASHBOARD (BUG FIXED)
+    # 1. SYSTEM DASHBOARD
     # ==========================================
     if app_mode == "📊 SYSTEM DASHBOARD":
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
@@ -131,43 +132,28 @@ def main():
             if pipeline is not None and 'submit' in locals() and submit:
                 with st.spinner("Running Anomaly Scan & AI Inference..."):
                     time.sleep(1)
-                    
-                    # 1. Dynamic Metric Calculations
                     monthly_inc = annual_inc / 12 if annual_inc > 0 else 1
                     installment_val = (loan_amnt * (int_rate / 1200)) / (1 - (1 + int_rate / 1200)**(-term))
                     dynamic_dti = (installment_val / monthly_inc) * 100
                     
-                    # 2. Integrated Fraud & Anomaly Block
                     fraud_flags = []
-                    if loan_amnt > (annual_inc * 4): 
-                        fraud_flags.append(f"Loan Amt ({loan_amnt}) > 4x Annual Income ({annual_inc}).")
-                    if dynamic_dti > 50.0: 
-                        fraud_flags.append(f"Critical DTI: {dynamic_dti:.1f}% (Exceeds 50% limit).")
+                    if loan_amnt > (annual_inc * 4): fraud_flags.append(f"Loan Amt ({loan_amnt}) > 4x Annual Income ({annual_inc}).")
+                    if dynamic_dti > 50.0: fraud_flags.append(f"Critical DTI: {dynamic_dti:.1f}% (Exceeds 50% limit).")
                         
                     r1, r2 = st.columns(2)
-                    
                     if len(fraud_flags) > 0:
-                        # Reject immediately without ML Prediction
                         with r1:
                             st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 SYSTEM REJECTED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Blocked by Security Rules</p>", unsafe_allow_html=True)
-                            for flag in fraud_flags:
-                                st.markdown(f'<div class="anomaly-box">❌ {flag}</div>', unsafe_allow_html=True)
-                        with r2: 
-                            st.metric("Confidence Score", "0.0 / 100")
+                            for flag in fraud_flags: st.markdown(f'<div class="anomaly-box">❌ {flag}</div>', unsafe_allow_html=True)
+                        with r2: st.metric("Confidence Score", "0.0 / 100")
                     else:
-                        # 3. Safe to proceed to ML Model
-                        df_input = pd.DataFrame([[loan_amnt, term, int_rate, installment_val, annual_inc, dynamic_dti, 10, 20]],
-                                                columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+                        df_input = pd.DataFrame([[loan_amnt, term, int_rate, installment_val, annual_inc, dynamic_dti, 10, 20]], columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
                         prediction = pipeline.predict(df_input)
                         probability = pipeline.predict_proba(df_input)[0][1] 
-                        
                         with r1:
-                            if prediction[0] == 1:
-                                st.markdown("<h3 style='color:#2ecc71; margin-bottom: 0px;'>✅ APPROVED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Low to Moderate</p>", unsafe_allow_html=True)
-                            else:
-                                st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 REJECTED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: High Default Probability</p>", unsafe_allow_html=True)
-                        with r2: 
-                            st.metric("Confidence Score", f"{probability*100:.1f} / 100")
+                            if prediction[0] == 1: st.markdown("<h3 style='color:#2ecc71; margin-bottom: 0px;'>✅ APPROVED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Low to Moderate</p>", unsafe_allow_html=True)
+                            else: st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 REJECTED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: High Default Probability</p>", unsafe_allow_html=True)
+                        with r2: st.metric("Confidence Score", f"{probability*100:.1f} / 100")
             else:
                 st.markdown("<p style='color:#9ca3af; font-style:italic;'>Awaiting input data. Click 'Execute' to generate AI insights.</p>", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -179,7 +165,6 @@ def main():
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
         stream_file = st.file_uploader("Upload Testing Data for Stream (CSV)", type="csv")
         if 'stream_active' not in st.session_state: st.session_state.stream_active = False
-
         c1, c2, c3 = st.columns([1, 1, 3])
         with c1:
             if st.button("▶️ START STREAM"): st.session_state.stream_active = True
@@ -205,19 +190,14 @@ def main():
                         try:
                             app_id = f"APP-{random.randint(10000, 99999)}"
                             l_amnt = float(row.get('loan_amnt', random.uniform(2000, 40000)))
-                            term = float(row.get('term', 36))
-                            i_rate = float(row.get('int_rate', 10.5))
-                            inst = float(row.get('installment', 300.0))
+                            term = float(row.get('term', 36)); i_rate = float(row.get('int_rate', 10.5)); inst = float(row.get('installment', 300.0))
                             a_inc = float(row.get('annual_inc', random.uniform(30000, 150000)))
-                            dti = float(row.get('dti', 15.0))
-                            open_acc = float(row.get('open_acc', 10))
-                            total_acc = float(row.get('total_acc', 20))
+                            dti = float(row.get('dti', 15.0)); open_acc = float(row.get('open_acc', 10)); total_acc = float(row.get('total_acc', 20))
                             
                             df_stream = pd.DataFrame({'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst], 'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [open_acc], 'total_acc': [total_acc]})
                             pred = pipeline.predict(df_stream)
                             prob = pipeline.predict_proba(df_stream)[0][1]
                             decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
-                            
                             new_record = pd.DataFrame({"Timestamp": [time.strftime("%H:%M:%S")], "App_ID": [app_id], "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"], "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]})
                             st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
                             table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
@@ -229,8 +209,7 @@ def main():
                     if not st.session_state.stream_active: break
                     app_id = f"APP-{random.randint(10000, 99999)}"
                     l_amnt = random.uniform(2000, 40000); a_inc = random.uniform(30000, 150000)
-                    term = 36; i_rate = 10.5; inst = 300.0; dti = 15.0
-                    df_stream = pd.DataFrame({'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst], 'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [10.0], 'total_acc': [20.0]})
+                    df_stream = pd.DataFrame({'loan_amnt': [l_amnt], 'term': [36], 'int_rate': [10.5], 'installment': [300.0], 'annual_inc': [a_inc], 'dti': [15.0], 'open_acc': [10.0], 'total_acc': [20.0]})
                     pred = pipeline.predict(df_stream)
                     prob = pipeline.predict_proba(df_stream)[0][1]
                     decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
@@ -355,7 +334,65 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 8. CREDIT ROADMAP
+    # 8. STRESS TESTING ENGINE (NEW FEATURE)
+    # ==========================================
+    elif app_mode == "🌪️ STRESS TESTING ENGINE":
+        st.markdown('<div class="content-container"><div class="content-container-header">🌪️ MACROECONOMIC STRESS TESTING</div>', unsafe_allow_html=True)
+        st.write("Simulate how economic downturns (e.g., Recession, Inflation) affect your active loan portfolio's default rate.")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            shock_income = st.slider("Income Drop Shock (%)", 0, 50, 20, help="Simulates unemployment or wage cuts")
+        with col2:
+            shock_interest = st.slider("Interest Rate Spike (%)", 0.0, 10.0, 4.0, help="Simulates central bank rate hikes")
+            
+        if st.button("💥 RUN PORTFOLIO STRESS TEST") and pipeline is not None:
+            with st.spinner("Applying macroeconomic shocks to portfolio data..."):
+                time.sleep(2)
+                
+                # Generate a synthetic baseline portfolio (1000 loans)
+                np.random.seed(42)
+                baseline_inc = np.random.normal(75000, 20000, 1000)
+                baseline_int = np.random.normal(10.5, 2.5, 1000)
+                baseline_loan = np.random.normal(15000, 5000, 1000)
+                baseline_dti = np.random.normal(15, 5, 1000)
+                
+                # BASELINE PREDICTION
+                df_base = pd.DataFrame({'loan_amnt': baseline_loan, 'term': 36, 'int_rate': baseline_int, 'installment': 300, 'annual_inc': baseline_inc, 'dti': baseline_dti, 'open_acc': 10, 'total_acc': 20})
+                pred_base = pipeline.predict(df_base)
+                base_default_rate = (len(pred_base[pred_base == 0]) / 1000) * 100
+                
+                # STRESSED PREDICTION (Applying Shocks)
+                stressed_inc = baseline_inc * (1 - (shock_income / 100))
+                stressed_int = baseline_int + shock_interest
+                # DTI naturally gets worse if income drops and interest goes up
+                stressed_dti = baseline_dti * (1 + (shock_income/100)) + shock_interest
+                
+                df_stressed = pd.DataFrame({'loan_amnt': baseline_loan, 'term': 36, 'int_rate': stressed_int, 'installment': 350, 'annual_inc': stressed_inc, 'dti': stressed_dti, 'open_acc': 10, 'total_acc': 20})
+                pred_stressed = pipeline.predict(df_stressed)
+                stress_default_rate = (len(pred_stressed[pred_stressed == 0]) / 1000) * 100
+                
+                # Display Results
+                st.markdown("### 📊 Stress Test Results")
+                r1, r2, r3 = st.columns(3)
+                with r1: st.metric("Baseline Default Rate", f"{base_default_rate:.1f}%")
+                with r2: st.metric("Stressed Default Rate", f"{stress_default_rate:.1f}%", f"+{(stress_default_rate - base_default_rate):.1f}% Risk", delta_color="inverse")
+                with r3: st.metric("Portfolio Status", "AT RISK" if stress_default_rate > 30 else "STABLE")
+                
+                # Visualization
+                df_viz = pd.DataFrame({
+                    "Scenario": ["Baseline Economy", "Stressed Economy"],
+                    "Default Rate (%)": [base_default_rate, stress_default_rate]
+                })
+                fig = px.bar(df_viz, x="Scenario", y="Default Rate (%)", color="Scenario", color_discrete_sequence=['#2ecc71', '#e74c3c'], text="Default Rate (%)")
+                fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'), showlegend=False)
+                st.plotly_chart(fig, use_container_width=True)
+                
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 9. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -371,7 +408,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 9. ADMIN GATEWAY
+    # 10. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
