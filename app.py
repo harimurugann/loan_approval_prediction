@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CUSTOM CSS: Modern Dark Fintech Design (Font Sizes Reduced) ---
+# --- CUSTOM CSS: Modern Dark Fintech Design ---
 st.markdown("""
     <style>
     /* Main background - Dark Slate/Charcoal */
@@ -26,33 +26,33 @@ st.markdown("""
     .custom-main-header {
         color: #ffffff;
         font-weight: 800;
-        font-size: 1.6rem; /* Reduced from 2.2rem */
+        font-size: 1.6rem;
         text-transform: uppercase;
         margin-top: -10px;
         margin-bottom: 25px;
         letter-spacing: 1.2px;
     }
 
-    /* KPI Cards - Reduced sizes */
+    /* KPI Cards */
     .kpi-card {
         background-image: linear-gradient(135deg, #262a33 0%, #1c1f26 100%);
         border: 1px solid #374151;
         border-bottom: 3px solid #00f2fe;
         border-radius: 8px;
-        padding: 15px; /* Reduced padding */
+        padding: 15px;
         text-align: left;
         margin-bottom: 15px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     .kpi-card h3 {
-        font-size: 0.75rem; /* Reduced */
+        font-size: 0.75rem;
         margin: 0;
         text-transform: uppercase;
         letter-spacing: 1px;
         color: #9ca3af;
     }
     .kpi-card p {
-        font-size: 1.4rem; /* Reduced from 1.8rem */
+        font-size: 1.4rem;
         margin: 5px 0;
         font-weight: bold;
         color: #ffffff !important;
@@ -74,7 +74,7 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     .content-container-header {
-        font-size: 1.0rem; /* Reduced from 1.2rem */
+        font-size: 1.0rem;
         font-weight: 700;
         margin-bottom: 15px;
         color: #ffffff;
@@ -83,9 +83,9 @@ st.markdown("""
         padding-bottom: 8px;
     }
 
-    /* Input Labels - Smaller */
+    /* Input Labels */
     label[data-testid="stWidgetLabel"] {
-        font-size: 0.75rem !important; /* Reduced */
+        font-size: 0.75rem !important;
         text-transform: uppercase !important;
         letter-spacing: 0.5px !important;
     }
@@ -118,7 +118,7 @@ st.markdown("""
         text-align: right;
         color: #2ecc71; 
         font-weight: 600;
-        font-size: 0.75rem; /* Reduced */
+        font-size: 0.75rem;
         letter-spacing: 1px;
     }
     
@@ -162,7 +162,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V2.6 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V2.7 | STATUS: SECURE")
 
     # HEADER AREA
     h_col1, h_col2 = st.columns([4, 1])
@@ -188,13 +188,13 @@ def main():
 
         col_form, col_anal = st.columns([1, 1.2])
         
-        # 👤 Apply for Loan Card (Removed unnecessary applicant name)
+        # 👤 Apply for Loan Card
         with col_form:
             st.markdown('<div class="content-container">', unsafe_allow_html=True)
             st.markdown('<div class="content-container-header">👤 APPLICANT DATA ENTRY</div>', unsafe_allow_html=True)
             
             if pipeline is None:
-                st.error("🚨 Pipeline artifact not found. Please run 'train_model.py' first.")
+                st.markdown("<p style='color:#e74c3c;'>🚨 Pipeline artifact not found. Please run 'train_model.py' first.</p>", unsafe_allow_html=True)
             else:
                 col_f1, col_f2 = st.columns(2)
                 with col_f1:
@@ -213,7 +213,7 @@ def main():
                 
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📈 Analysis / Results Card (Removed unnecessary probability chart)
+        # 📈 Analysis / Results Card
         with col_anal:
             st.markdown('<div class="content-container">', unsafe_allow_html=True)
             st.markdown('<div class="content-container-header">📈 AI INFERENCE RESULTS</div>', unsafe_allow_html=True)
@@ -233,20 +233,19 @@ def main():
                     
                     res_col1, res_col2 = st.columns(2)
                     with res_col1:
+                        # Replaced Streamlit alert boxes with clean markdown
                         if prediction[0] == 1:
-                            st.success("✅ STATUS: APPROVED")
-                            st.caption("Risk Profile: Low to Moderate")
+                            st.markdown("<h3 style='color:#2ecc71; margin-bottom: 0px;'>✅ APPROVED</h3>", unsafe_allow_html=True)
+                            st.markdown("<p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Low to Moderate</p>", unsafe_allow_html=True)
                         else:
-                            st.error("🚫 STATUS: REJECTED")
-                            st.caption("Risk Profile: High Default Probability")
+                            st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 REJECTED</h3>", unsafe_allow_html=True)
+                            st.markdown("<p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: High Default Probability</p>", unsafe_allow_html=True)
                             
                     with res_col2:
-                        st.metric("Approval Confidence Score", f"{probability*100:.1f} / 100")
-                    
-                    st.write("")
-                    st.progress(probability)
+                        st.metric("Confidence Score", f"{probability*100:.1f} / 100")
             else:
-                st.info("Awaiting input data. Click 'Execute Risk Analysis' to generate AI insights.")
+                # Replaced the blue st.info box with clean text
+                st.markdown("<p style='color:#9ca3af; font-style:italic;'>Awaiting input data. Click 'Execute' to generate AI insights.</p>", unsafe_allow_html=True)
                 
             st.markdown('</div>', unsafe_allow_html=True)
 
@@ -269,12 +268,12 @@ def main():
                     X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
                     predictions = pipeline.predict(X_bulk)
                     df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
-                    st.success("✅ Batch processing complete!")
+                    st.markdown("<h4 style='color:#2ecc71;'>✅ Batch processing complete!</h4>", unsafe_allow_html=True)
                     st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(5))
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 3. CREDIT ROADMAP MODULE (Fixed & Working)
+    # 3. CREDIT ROADMAP MODULE
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -291,7 +290,6 @@ def main():
             st.markdown("**Step 2 (30-60 Days): Credit Utilization**\n* Keep credit card balances below 10% of your total limit.")
             st.markdown("**Step 3 (Long Term): Consistent History**\n* Setup automated payments. The AI engine heavily weights 'Total Accounts' and payment history.")
             st.markdown('</div>', unsafe_allow_html=True)
-            st.balloons()
             
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -304,7 +302,7 @@ def main():
         pwd = st.text_input("Security Key (Password)", type="password")
         if st.button("AUTHENTICATE SESSION"):
             if authenticate(user, pwd):
-                st.success("✅ Authorized. Server Metrics Online.")
+                st.markdown("<h4 style='color:#2ecc71;'>✅ Authorized. Server Metrics Online.</h4>", unsafe_allow_html=True)
                 st.code("""
                 [SYSTEM LOG]
                 - Model Loaded: RandomForestClassifier
@@ -313,7 +311,7 @@ def main():
                 - Data Drift Detected: None
                 """, language="bash")
             else:
-                st.error("🚫 Authentication Failed. Invalid Credentials.")
+                st.markdown("<p style='color:#e74c3c;'>🚫 Authentication Failed. Invalid Credentials.</p>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
