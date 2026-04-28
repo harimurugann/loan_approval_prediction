@@ -51,6 +51,7 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #0a0a0a; }
     .status-text { text-align: right; color: #2ecc71; font-weight: 600; font-size: 0.75rem; letter-spacing: 1px; }
     .roadmap-box { background-color: #1a1c24; border-left: 4px solid #00f2fe; padding: 15px; margin-top: 15px; border-radius: 4px; }
+    .anomaly-box { background-color: #2c0b0e; border-left: 4px solid #e74c3c; padding: 15px; margin-top: 10px; border-radius: 4px; color: #ffcccc;}
     .stream-active { color: #00f2fe; font-weight: bold; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
@@ -82,12 +83,13 @@ def main():
         "🌐 LIVE API STREAM",
         "📂 BULK PROCESSING",
         "🧠 EXPLAINABLE AI (XAI)",
+        "🚨 FRAUD & ANOMALY DETECT",
         "🗺️ CREDIT ROADMAP",
         "🔒 ADMIN GATEWAY"
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.4 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.5 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -152,8 +154,7 @@ def main():
 
         stream_file = st.file_uploader("Upload Testing Data for Stream (CSV)", type="csv")
         
-        if 'stream_active' not in st.session_state:
-            st.session_state.stream_active = False
+        if 'stream_active' not in st.session_state: st.session_state.stream_active = False
 
         c1, c2, c3 = st.columns([1, 1, 3])
         with c1:
@@ -183,14 +184,14 @@ def main():
                         if not st.session_state.stream_active: break
                         try:
                             app_id = f"APP-{random.randint(10000, 99999)}"
-                            l_amnt = float(row.get('loan_amnt', random.uniform(2000, 40000)) or random.uniform(2000, 40000))
-                            term = float(row.get('term', 36) or 36)
-                            i_rate = float(row.get('int_rate', 10.5) or 10.5)
-                            inst = float(row.get('installment', 300.0) or 300.0)
-                            a_inc = float(row.get('annual_inc', random.uniform(30000, 150000)) or 75000.0)
-                            dti = float(row.get('dti', 15.0) or 15.0)
-                            open_acc = float(row.get('open_acc', 10) or 10)
-                            total_acc = float(row.get('total_acc', 20) or 20)
+                            l_amnt = float(row.get('loan_amnt', random.uniform(2000, 40000)))
+                            term = float(row.get('term', 36))
+                            i_rate = float(row.get('int_rate', 10.5))
+                            inst = float(row.get('installment', 300.0))
+                            a_inc = float(row.get('annual_inc', random.uniform(30000, 150000)))
+                            dti = float(row.get('dti', 15.0))
+                            open_acc = float(row.get('open_acc', 10))
+                            total_acc = float(row.get('total_acc', 20))
                             
                             df_stream = pd.DataFrame({
                                 'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
@@ -211,21 +212,17 @@ def main():
                             table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
                             time.sleep(1.2) 
                             
-                        except Exception as inner_e:
-                            st.error(f"Error processing row {index}. Reason: {str(inner_e)}")
+                        except Exception:
                             break
                 except pd.errors.EmptyDataError:
-                    st.error("🚨 Error: The uploaded CSV file is completely EMPTY. Please use the Sample Template.")
+                    st.error("🚨 Error: Uploaded CSV is EMPTY.")
             else:
                 for i in range(20):
                     if not st.session_state.stream_active: break
                     app_id = f"APP-{random.randint(10000, 99999)}"
                     l_amnt = random.uniform(2000, 40000)
-                    term = random.choice([36, 60])
-                    i_rate = random.uniform(5.0, 25.0)
                     a_inc = random.uniform(30000, 150000)
-                    dti = random.uniform(5.0, 35.0)
-                    inst = (l_amnt * (i_rate / 1200)) / (1 - (1 + i_rate / 1200)**(-term))
+                    term = 36; i_rate = 10.5; inst = 300.0; dti = 15.0
                     
                     df_stream = pd.DataFrame({
                         'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
@@ -247,7 +244,6 @@ def main():
                     time.sleep(1.2)
 
             st.session_state.stream_active = False
-            st.success("✅ Stream Session Completed.")
             
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -256,88 +252,96 @@ def main():
     # ==========================================
     elif app_mode == "📂 BULK PROCESSING":
         st.markdown('<div class="content-container"><div class="content-container-header">📂 HIGH-VOLUME BATCH PROCESSING</div>', unsafe_allow_html=True)
-        st.write("Upload your 20,000+ rows dataset here for instant batch predictions.")
         uploaded_file = st.file_uploader("Upload Batch CSV", type="csv")
-        
         if uploaded_file is not None and pipeline is not None:
             df_bulk = pd.read_csv(uploaded_file)
-            st.write(f"Loaded **{len(df_bulk)}** records from file.")
-            
             if st.button("PROCESS BATCH DATA"):
-                with st.spinner(f"AI Engine is processing {len(df_bulk)} records..."):
-                    time.sleep(1.5) 
-                    X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
-                    predictions = pipeline.predict(X_bulk)
-                    df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
-                    st.markdown(f"<h4 style='color:#2ecc71;'>✅ Successfully Processed All {len(df_bulk)} Records!</h4>", unsafe_allow_html=True)
-                    st.write(f"Preview (First 10 of {len(df_bulk)} results):")
-                    st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(10))
-                    st.markdown("---")
-                    csv_export = df_bulk.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        label="DOWNLOAD FULL REPORT (CSV)",
-                        data=csv_export,
-                        file_name='20k_Predictions_Result.csv',
-                        mime='text/csv',
-                    )
+                X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
+                predictions = pipeline.predict(X_bulk)
+                df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
+                st.markdown("<h4 style='color:#2ecc71;'>✅ Batch processing complete!</h4>", unsafe_allow_html=True)
+                st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(5))
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 4. EXPLAINABLE AI (XAI) - NEW MODULE
+    # 4. EXPLAINABLE AI (XAI)
     # ==========================================
     elif app_mode == "🧠 EXPLAINABLE AI (XAI)":
         st.markdown('<div class="content-container"><div class="content-container-header">🧠 EXPLAINABLE AI (TRANSPARENCY ENGINE)</div>', unsafe_allow_html=True)
-        st.write("Understand the 'WHY' behind the AI's decision. Adjust the inputs below to see how each feature impacts the final prediction.")
-        
-        if pipeline is None:
-            st.error("🚨 Pipeline not found. Run 'train_model.py' first.")
-        else:
-            col1, col2 = st.columns(2)
-            with col1:
-                x_dti = st.slider("Debt-to-Income (DTI %)", 0.0, 50.0, 35.0)
-                x_inc = st.number_input("Annual Income ($)", value=45000.0, step=5000.0)
-                x_int = st.slider("Interest Rate (%)", 5.0, 25.0, 18.0)
-            with col2:
-                x_amnt = st.number_input("Loan Amount ($)", value=25000.0, step=1000.0)
-                x_term = st.selectbox("Term (Months)", [36, 60])
-                x_acc = st.slider("Total Active Accounts", 2, 40, 10)
-                
-            if st.button("🔍 EXPLAIN PREDICTION"):
-                x_inst = (x_amnt * (x_int / 1200)) / (1 - (1 + x_int / 1200)**(-x_term))
-                df_xai = pd.DataFrame([[x_amnt, x_term, x_int, x_inst, x_inc, x_dti, x_acc, x_acc*2]],
-                                      columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
-                
-                prediction = pipeline.predict(df_xai)
-                status = "APPROVED" if prediction[0] == 1 else "REJECTED"
-                color = "#2ecc71" if prediction[0] == 1 else "#e74c3c"
-                
-                st.markdown(f"<h3 style='color:{color}; text-align:center;'>AI DECISION: {status}</h3>", unsafe_allow_html=True)
-                st.markdown("---")
-                
-                # Simulating Feature Impact values based on typical credit risk logic
-                impact_data = {
-                    'Feature': ['Annual Income', 'Debt-to-Income (DTI)', 'Interest Rate', 'Loan Amount', 'Total Accounts'],
-                    'Impact': [
-                        (x_inc - 60000) / 10000, 
-                        (20 - x_dti) / 5,         
-                        (12 - x_int) / 2,         
-                        (15000 - x_amnt) / 5000,  
-                        (x_acc - 5) / 2           
-                    ]
-                }
-                df_impact = pd.DataFrame(impact_data)
-                df_impact['Color'] = df_impact['Impact'].apply(lambda x: '#2ecc71' if x > 0 else '#e74c3c')
-                
-                fig = px.bar(df_impact, x='Impact', y='Feature', orientation='h',
-                             title="Feature Contribution to Decision (Positive = Helps Approval, Negative = Causes Rejection)",
-                             color='Color', color_discrete_map="identity")
-                
-                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
-                st.plotly_chart(fig, use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            x_dti = st.slider("Debt-to-Income (DTI %)", 0.0, 50.0, 35.0)
+            x_inc = st.number_input("Annual Income ($)", value=45000.0, step=5000.0)
+            x_int = st.slider("Interest Rate (%)", 5.0, 25.0, 18.0)
+        with col2:
+            x_amnt = st.number_input("Loan Amount ($)", value=25000.0, step=1000.0)
+            x_term = st.selectbox("Term (Months)", [36, 60])
+            x_acc = st.slider("Total Active Accounts", 2, 40, 10)
+            
+        if st.button("🔍 EXPLAIN PREDICTION") and pipeline is not None:
+            x_inst = (x_amnt * (x_int / 1200)) / (1 - (1 + x_int / 1200)**(-x_term))
+            df_xai = pd.DataFrame([[x_amnt, x_term, x_int, x_inst, x_inc, x_dti, x_acc, x_acc*2]],
+                                  columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+            prediction = pipeline.predict(df_xai)
+            status = "APPROVED" if prediction[0] == 1 else "REJECTED"
+            color = "#2ecc71" if prediction[0] == 1 else "#e74c3c"
+            st.markdown(f"<h3 style='color:{color}; text-align:center;'>AI DECISION: {status}</h3>", unsafe_allow_html=True)
+            
+            impact_data = {
+                'Feature': ['Annual Income', 'Debt-to-Income (DTI)', 'Interest Rate', 'Loan Amount', 'Total Accounts'],
+                'Impact': [(x_inc - 60000)/10000, (20 - x_dti)/5, (12 - x_int)/2, (15000 - x_amnt)/5000, (x_acc - 5)/2]
+            }
+            df_impact = pd.DataFrame(impact_data)
+            df_impact['Color'] = df_impact['Impact'].apply(lambda x: '#2ecc71' if x > 0 else '#e74c3c')
+            fig = px.bar(df_impact, x='Impact', y='Feature', orientation='h', color='Color', color_discrete_map="identity")
+            fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
+            st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 5. CREDIT ROADMAP
+    # 5. FRAUD & ANOMALY DETECT (NEW FEATURE)
+    # ==========================================
+    elif app_mode == "🚨 FRAUD & ANOMALY DETECT":
+        st.markdown('<div class="content-container"><div class="content-container-header">🚨 FRAUD & ANOMALY DETECTION LAYER</div>', unsafe_allow_html=True)
+        st.write("Scan applications for logically inconsistent or suspicious data points before ML inference.")
+        
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+            f_inc = st.number_input("Reported Annual Income ($)", value=15000.0, step=1000.0)
+            f_dti = st.number_input("Reported DTI (%)", value=65.0)
+        with f_col2:
+            f_amnt = st.number_input("Requested Loan Amount ($)", value=80000.0, step=1000.0)
+            f_acc = st.number_input("Recent Accounts Opened", value=25)
+            
+        if st.button("🛡️ RUN SECURITY SCAN"):
+            with st.spinner("Scanning for anomalies..."):
+                time.sleep(1)
+                
+                anomalies = []
+                # Rule 1: High Loan to Income Ratio
+                if f_amnt > (f_inc * 4):
+                    anomalies.append("Loan amount is excessively high compared to reported income (Risk of Income Fraud).")
+                # Rule 2: Extreme DTI
+                if f_dti > 50.0:
+                    anomalies.append("Debt-to-Income ratio exceeds critical threshold of 50%.")
+                # Rule 3: Account Burst (Identity Theft Indicator)
+                if f_acc > 15:
+                    anomalies.append("Suspiciously high number of recent account openings (Possible Identity Theft / Synthetic ID).")
+                    
+                if len(anomalies) > 0:
+                    st.markdown("<h3 style='color:#e74c3c;'>⚠️ ANOMALIES DETECTED</h3>", unsafe_allow_html=True)
+                    st.markdown("The system flagged the following security warnings:")
+                    for issue in anomalies:
+                        st.markdown(f'<div class="anomaly-box">❌ {issue}</div>', unsafe_allow_html=True)
+                    st.markdown("<br><p style='color:#9ca3af;'><i>Recommendation: Route application to manual underwriter team immediately. Do not process through automated ML pipeline.</i></p>", unsafe_allow_html=True)
+                else:
+                    st.markdown("<h3 style='color:#2ecc71;'>✅ SCAN CLEAR</h3>", unsafe_allow_html=True)
+                    st.write("No logical inconsistencies found. Safe to proceed to ML risk inference.")
+                    st.balloons()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 6. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -354,7 +358,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 6. ADMIN GATEWAY
+    # 7. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
