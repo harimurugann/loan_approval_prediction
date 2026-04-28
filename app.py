@@ -3,8 +3,6 @@ import streamlit as st
 import pandas as pd
 import joblib
 import os
-import plotly.express as px
-from fpdf import FPDF
 import bcrypt
 
 # Directory Handling
@@ -32,14 +30,9 @@ def main():
     app_mode = st.sidebar.selectbox("Intelligence Modules", [
         "1. Single Assessment Hub",
         "2. Bulk Assessment Hub",
-        "3. XAI Decision Logic",
-        "4. Model Drift Monitoring",
-        "5. Live Geospatial Mapping",
-        "6. Fraud/Anomaly Detection Layer",
-        "7. PDF Bank Statement Generator",
-        "8. Admin CRM Hub",
-        "9. Batch Data Export",
-        "10. Secure Admin Gateway"
+        "3. Live Dashboard & Analytics",
+        "4. Secure Admin Gateway",
+        "5. Other Modules (Placeholders)"
     ])
 
     if app_mode == "1. Single Assessment Hub":
@@ -74,7 +67,56 @@ def main():
                 else:
                     st.error(f"Assessment Status: DENIED / HIGH RISK (Probability Score: {probability:.2%})")
 
-    elif app_mode == "10. Secure Admin Gateway":
+    elif app_mode == "2. Bulk Assessment Hub":
+        st.header("Bulk Assessment (Upload CSV)")
+        st.write("Upload a CSV file with customer data to get batch predictions.")
+        
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        
+        if uploaded_file is not None and pipeline is not None:
+            df_bulk = pd.read_csv(uploaded_file)
+            st.write("Preview of Uploaded Data:")
+            st.dataframe(df_bulk.head())
+            
+            if st.button("Run Bulk Prediction"):
+                try:
+                    # Drop target column if it exists in the uploaded file
+                    if 'loan_paid_back' in df_bulk.columns:
+                        X_bulk = df_bulk.drop('loan_paid_back', axis=1)
+                    else:
+                        X_bulk = df_bulk
+                        
+                    predictions = pipeline.predict(X_bulk)
+                    df_bulk['Predicted_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
+                    
+                    st.success("Bulk Prediction Completed!")
+                    st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'Predicted_Status']].head(10))
+                    
+                    # Convert to CSV for download
+                    csv = df_bulk.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="Download Results as CSV",
+                        data=csv,
+                        file_name='bulk_predictions_result.csv',
+                        mime='text/csv',
+                    )
+                except Exception as e:
+                    st.error(f"Error in prediction. Make sure column names match the training data. Error: {e}")
+
+    elif app_mode == "3. Live Dashboard & Analytics":
+        st.header("Data Analytics")
+        st.info("Here you can visualize the data. Try uploading the 'loan_dataset_20000.csv' file.")
+        data_file = st.file_uploader("Upload dataset for analysis", type="csv", key="analytics")
+        if data_file is not None:
+            df_plot = pd.read_csv(data_file)
+            st.write("Summary Statistics")
+            st.write(df_plot.describe())
+            
+            if 'loan_amnt' in df_plot.columns:
+                st.subheader("Loan Amount Distribution")
+                st.bar_chart(df_plot['loan_amnt'].head(50)) # Showing first 50 for quick rendering
+
+    elif app_mode == "4. Secure Admin Gateway":
         st.header("Restricted Access")
         user = st.text_input("Username")
         pwd = st.text_input("Password", type="password")
@@ -82,11 +124,12 @@ def main():
             if authenticate(user, pwd):
                 st.success("Authorized: Level 4 Security Clearance Granted.")
             else:
-                st.error("Authentication Failed.")
+                st.error("Authentication Failed. (Hint: use admin / admin123)")
                 
-    else:
-        st.header(app_mode)
+    elif app_mode == "5. Other Modules (Placeholders)":
+        st.header("Under Construction")
         st.warning("Module interface is active. Connect underlying datastore in Production configuration.")
+        st.write("Idhu madhiri matha modules-a (PDF generation, Geospatial mapping) unga thevaikku yetpa code add pannikkalam.")
 
 if __name__ == "__main__":
     main()
