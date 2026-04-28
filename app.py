@@ -97,7 +97,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V4.3 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V4.4 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1: st.markdown('<div class="custom-main-header">LOAN RISK ASSESSMENT SYSTEM</div>', unsafe_allow_html=True)
@@ -264,11 +264,11 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 7. SYNDICATE FRAUD NETWORK (NEW AML FEATURE)
+    # 7. SYNDICATE FRAUD NETWORK (BUG FIXED!)
     # ==========================================
     elif app_mode == "🕵️‍♂️ SYNDICATE FRAUD NETWORK":
         st.markdown('<div class="content-container"><div class="content-container-header">🕵️‍♂️ SYNDICATE FRAUD & AML NETWORK</div>', unsafe_allow_html=True)
-        st.write("Scan the applicant's network graph to detect connections with known defaulters (Fraud Rings) via shared IPs, Phone Numbers, or Employers.")
+        st.write("Scan the applicant's network graph to detect connections with known defaulters (Fraud Rings).")
         
         applicant_id = st.text_input("Enter Applicant ID to Scan", value="APP-89421")
         
@@ -276,66 +276,37 @@ def main():
             with st.spinner("Mapping deep connections..."):
                 time.sleep(2)
                 
-                # Simulating a Plotly Network Graph
                 # Defining Node Positions
                 node_x = [0, 1, 2, -1, -2, 0, 0]
                 node_y = [0, 1, 1.5, 1, 1.5, -1, -2]
                 node_text = [
-                    f"Applicant<br>{applicant_id}", 
-                    "Shared IP:<br>192.168.1.45", 
-                    "Blacklisted Defaulter<br>#D-102", 
-                    "Shared Phone:<br>+1-555-0198", 
-                    "Blacklisted Defaulter<br>#D-998",
-                    "Shared Employer:<br>Acme Corp",
-                    "Good Customer<br>#C-772"
+                    f"Applicant<br>{applicant_id}", "Shared IP:<br>192.168.1.45", "Blacklisted Defaulter<br>#D-102", 
+                    "Shared Phone:<br>+1-555-0198", "Blacklisted Defaulter<br>#D-998", "Shared Employer:<br>Acme Corp", "Good Customer<br>#C-772"
                 ]
                 node_color = ['#f1c40f', '#95a5a6', '#e74c3c', '#95a5a6', '#e74c3c', '#95a5a6', '#2ecc71']
                 
-                # Defining Edges (Lines between nodes)
                 edge_x = [0, 1, None, 1, 2, None, 0, -1, None, -1, -2, None, 0, 0, None, 0, 0, None]
                 edge_y = [0, 1, None, 1, 1.5, None, 0, 1, None, 1, 1.5, None, 0, -1, None, -1, -2, None]
 
-                # Create Edge Trace
-                edge_trace = go.Scatter(
-                    x=edge_x, y=edge_y,
-                    line=dict(width=2, color='#888'),
-                    hoverinfo='none',
-                    mode='lines')
+                edge_trace = go.Scatter(x=edge_x, y=edge_y, line=dict(width=2, color='#888'), hoverinfo='none', mode='lines')
+                node_trace = go.Scatter(x=node_x, y=node_y, mode='markers+text', text=[t.split('<br>')[0] for t in node_text], textposition="bottom center", hovertext=node_text, hoverinfo='text', marker=dict(color=node_color, size=30, line_width=2))
 
-                # Create Node Trace
-                node_trace = go.Scatter(
-                    x=node_x, y=node_y,
-                    mode='markers+text',
-                    text=[t.split('<br>')[0] for t in node_text], # Short text for display
-                    textposition="bottom center",
-                    hovertext=node_text,
-                    hoverinfo='text',
-                    marker=dict(
-                        showscale=False,
-                        color=node_color,
-                        size=30,
-                        line_width=2))
-
-                # Create Figure
-                fig = go.Figure(data=[edge_trace, node_trace],
-                             layout=go.Layout(
-                                title='Entity Link Analysis (1st & 2nd Degree Connections)',
-                                titlefont_size=16,
-                                font=dict(color='#e5e7eb'),
-                                showlegend=False,
-                                hovermode='closest',
-                                margin=dict(b=20,l=5,r=5,t=40),
-                                plot_bgcolor='rgba(0,0,0,0)',
-                                paper_bgcolor='rgba(0,0,0,0)',
-                                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
-                                )
+                # BUG FIX: Safely formatting Layout parameters
+                fig = go.Figure(data=[edge_trace, node_trace], layout=go.Layout(
+                    title=dict(text='Entity Link Analysis (1st & 2nd Degree Connections)', font=dict(size=16, color='#ffffff')),
+                    font=dict(color='#e5e7eb'),
+                    showlegend=False,
+                    hovermode='closest',
+                    margin=dict(b=20,l=5,r=5,t=40),
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
+                ))
                 
-                # Display Results
                 st.error("🚨 CRITICAL AML ALERT: Syndicate Fraud Detected!")
                 st.write(f"Applicant **{applicant_id}** is deeply connected to 2 Known Defaulters via a shared IP Address and Phone Number. This indicates a high probability of a coordinated Fraud Ring.")
                 st.plotly_chart(fig, use_container_width=True)
-                st.markdown("<p style='color:#9ca3af; font-style:italic;'>Rule F-402: Reject application immediately and flag IP/Phone to the central blacklist registry.</p>", unsafe_allow_html=True)
                 
         st.markdown('</div>', unsafe_allow_html=True)
 
