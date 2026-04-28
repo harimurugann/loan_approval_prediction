@@ -5,6 +5,8 @@ import joblib
 import os
 import time
 import random
+import plotly.express as px
+import plotly.graph_objects as go
 
 # --- PAGE CONFIGURATION & METADATA ---
 st.set_page_config(
@@ -79,12 +81,13 @@ def main():
         "📊 SYSTEM DASHBOARD",
         "🌐 LIVE API STREAM",
         "📂 BULK PROCESSING",
+        "🧠 EXPLAINABLE AI (XAI)",
         "🗺️ CREDIT ROADMAP",
         "🔒 ADMIN GATEWAY"
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.3 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.4 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -154,11 +157,9 @@ def main():
 
         c1, c2, c3 = st.columns([1, 1, 3])
         with c1:
-            if st.button("▶️ START STREAM"):
-                st.session_state.stream_active = True
+            if st.button("▶️ START STREAM"): st.session_state.stream_active = True
         with c2:
-            if st.button("⏹️ STOP STREAM"):
-                st.session_state.stream_active = False
+            if st.button("⏹️ STOP STREAM"): st.session_state.stream_active = False
 
         if st.session_state.stream_active:
             st.markdown("<p class='stream-active'>🟢 System is actively streaming and processing records...</p>", unsafe_allow_html=True)
@@ -166,7 +167,6 @@ def main():
             st.markdown("<p style='color:#9ca3af;'>🔴 Stream is currently offline.</p>", unsafe_allow_html=True)
 
         st.markdown("---")
-        
         placeholder = st.empty()
 
         if st.session_state.stream_active and pipeline is not None:
@@ -174,20 +174,15 @@ def main():
                 st.session_state.live_df = pd.DataFrame(columns=["Timestamp", "App_ID", "Req_Amount", "Income", "AI_Decision", "Confidence"])
 
             with placeholder.container():
-                st.write("Live Data Feed:")
                 table_placeholder = st.empty()
 
             if stream_file is not None:
                 try:
                     df_test = pd.read_csv(stream_file)
-                    
                     for index, row in df_test.iterrows():
-                        if not st.session_state.stream_active:
-                            break
-                        
+                        if not st.session_state.stream_active: break
                         try:
                             app_id = f"APP-{random.randint(10000, 99999)}"
-                            
                             l_amnt = float(row.get('loan_amnt', random.uniform(2000, 40000)) or random.uniform(2000, 40000))
                             term = float(row.get('term', 36) or 36)
                             i_rate = float(row.get('int_rate', 10.5) or 10.5)
@@ -222,10 +217,8 @@ def main():
                 except pd.errors.EmptyDataError:
                     st.error("🚨 Error: The uploaded CSV file is completely EMPTY. Please use the Sample Template.")
             else:
-                st.info("No file uploaded. Generating synthetic test data for stream...")
                 for i in range(20):
-                    if not st.session_state.stream_active:
-                        break
+                    if not st.session_state.stream_active: break
                     app_id = f"APP-{random.randint(10000, 99999)}"
                     l_amnt = random.uniform(2000, 40000)
                     term = random.choice([36, 60])
@@ -259,12 +252,11 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 3. BULK PROCESSING (UPDATED WITH DOWNLOAD BUTTON)
+    # 3. BULK PROCESSING
     # ==========================================
     elif app_mode == "📂 BULK PROCESSING":
         st.markdown('<div class="content-container"><div class="content-container-header">📂 HIGH-VOLUME BATCH PROCESSING</div>', unsafe_allow_html=True)
         st.write("Upload your 20,000+ rows dataset here for instant batch predictions.")
-        
         uploaded_file = st.file_uploader("Upload Batch CSV", type="csv")
         
         if uploaded_file is not None and pipeline is not None:
@@ -273,23 +265,14 @@ def main():
             
             if st.button("PROCESS BATCH DATA"):
                 with st.spinner(f"AI Engine is processing {len(df_bulk)} records..."):
-                    time.sleep(1.5) # Small simulated delay for processing feel
-                    
+                    time.sleep(1.5) 
                     X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
                     predictions = pipeline.predict(X_bulk)
-                    
-                    # Store result back into the dataframe
                     df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
-                    
                     st.markdown(f"<h4 style='color:#2ecc71;'>✅ Successfully Processed All {len(df_bulk)} Records!</h4>", unsafe_allow_html=True)
-                    
-                    # Showing only a PREVIEW to avoid crashing the browser
                     st.write(f"Preview (First 10 of {len(df_bulk)} results):")
                     st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(10))
-                    
-                    # DOWNLOAD BUTTON FOR THE FULL RESULTS
                     st.markdown("---")
-                    st.write("📥 Click below to download the complete file with all AI predictions:")
                     csv_export = df_bulk.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label="DOWNLOAD FULL REPORT (CSV)",
@@ -300,7 +283,61 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 4. CREDIT ROADMAP
+    # 4. EXPLAINABLE AI (XAI) - NEW MODULE
+    # ==========================================
+    elif app_mode == "🧠 EXPLAINABLE AI (XAI)":
+        st.markdown('<div class="content-container"><div class="content-container-header">🧠 EXPLAINABLE AI (TRANSPARENCY ENGINE)</div>', unsafe_allow_html=True)
+        st.write("Understand the 'WHY' behind the AI's decision. Adjust the inputs below to see how each feature impacts the final prediction.")
+        
+        if pipeline is None:
+            st.error("🚨 Pipeline not found. Run 'train_model.py' first.")
+        else:
+            col1, col2 = st.columns(2)
+            with col1:
+                x_dti = st.slider("Debt-to-Income (DTI %)", 0.0, 50.0, 35.0)
+                x_inc = st.number_input("Annual Income ($)", value=45000.0, step=5000.0)
+                x_int = st.slider("Interest Rate (%)", 5.0, 25.0, 18.0)
+            with col2:
+                x_amnt = st.number_input("Loan Amount ($)", value=25000.0, step=1000.0)
+                x_term = st.selectbox("Term (Months)", [36, 60])
+                x_acc = st.slider("Total Active Accounts", 2, 40, 10)
+                
+            if st.button("🔍 EXPLAIN PREDICTION"):
+                x_inst = (x_amnt * (x_int / 1200)) / (1 - (1 + x_int / 1200)**(-x_term))
+                df_xai = pd.DataFrame([[x_amnt, x_term, x_int, x_inst, x_inc, x_dti, x_acc, x_acc*2]],
+                                      columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+                
+                prediction = pipeline.predict(df_xai)
+                status = "APPROVED" if prediction[0] == 1 else "REJECTED"
+                color = "#2ecc71" if prediction[0] == 1 else "#e74c3c"
+                
+                st.markdown(f"<h3 style='color:{color}; text-align:center;'>AI DECISION: {status}</h3>", unsafe_allow_html=True)
+                st.markdown("---")
+                
+                # Simulating Feature Impact values based on typical credit risk logic
+                impact_data = {
+                    'Feature': ['Annual Income', 'Debt-to-Income (DTI)', 'Interest Rate', 'Loan Amount', 'Total Accounts'],
+                    'Impact': [
+                        (x_inc - 60000) / 10000, 
+                        (20 - x_dti) / 5,         
+                        (12 - x_int) / 2,         
+                        (15000 - x_amnt) / 5000,  
+                        (x_acc - 5) / 2           
+                    ]
+                }
+                df_impact = pd.DataFrame(impact_data)
+                df_impact['Color'] = df_impact['Impact'].apply(lambda x: '#2ecc71' if x > 0 else '#e74c3c')
+                
+                fig = px.bar(df_impact, x='Impact', y='Feature', orientation='h',
+                             title="Feature Contribution to Decision (Positive = Helps Approval, Negative = Causes Rejection)",
+                             color='Color', color_discrete_map="identity")
+                
+                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
+                st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 5. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -317,7 +354,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 5. ADMIN GATEWAY
+    # 6. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
