@@ -49,7 +49,6 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #0a0a0a; }
     .status-text { text-align: right; color: #2ecc71; font-weight: 600; font-size: 0.75rem; letter-spacing: 1px; }
     .roadmap-box { background-color: #1a1c24; border-left: 4px solid #00f2fe; padding: 15px; margin-top: 15px; border-radius: 4px; }
-    /* Stream Pulse Effect */
     .stream-active { color: #00f2fe; font-weight: bold; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
@@ -85,9 +84,8 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V2.9 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.0 | STATUS: SECURE")
 
-    # HEADER AREA
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
         st.markdown('<div class="custom-main-header">LOAN RISK ASSESSMENT SYSTEM</div>', unsafe_allow_html=True)
@@ -143,12 +141,15 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 2. LIVE API STREAM SIMULATION (NEW FEATURE)
+    # 2. LIVE API STREAM SIMULATION (UPDATED FOR TESTING DATA)
     # ==========================================
     elif app_mode == "🌐 LIVE API STREAM":
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
-        st.write("Simulating real-time loan applications coming from web and mobile endpoints.")
+        st.write("Upload a testing dataset (CSV). The system will simulate streaming this data row-by-row through the ML API.")
 
+        # File uploader for Testing Data
+        stream_file = st.file_uploader("Upload Testing Data for Stream (CSV)", type="csv")
+        
         if 'stream_active' not in st.session_state:
             st.session_state.stream_active = False
 
@@ -161,13 +162,12 @@ def main():
                 st.session_state.stream_active = False
 
         if st.session_state.stream_active:
-            st.markdown("<p class='stream-active'>🟢 System is actively listening for incoming API requests...</p>", unsafe_allow_html=True)
+            st.markdown("<p class='stream-active'>🟢 System is actively streaming and processing records...</p>", unsafe_allow_html=True)
         else:
             st.markdown("<p style='color:#9ca3af;'>🔴 Stream is currently offline.</p>", unsafe_allow_html=True)
 
         st.markdown("---")
         
-        # Placeholder for live table
         placeholder = st.empty()
 
         if st.session_state.stream_active and pipeline is not None:
@@ -178,43 +178,78 @@ def main():
                 st.write("Live Data Feed:")
                 table_placeholder = st.empty()
 
-            # Process 20 simulated API calls
-            for i in range(20):
-                if not st.session_state.stream_active:
-                    break
+            # Check if user uploaded a file
+            if stream_file is not None:
+                df_test = pd.read_csv(stream_file)
                 
-                # Synthetic data generation
-                app_id = f"APP-{random.randint(10000, 99999)}"
-                l_amnt = random.uniform(2000, 40000)
-                term = random.choice([36, 60])
-                i_rate = random.uniform(5.0, 25.0)
-                a_inc = random.uniform(30000, 150000)
-                dti = random.uniform(5.0, 35.0)
-                inst = (l_amnt * (i_rate / 1200)) / (1 - (1 + i_rate / 1200)**(-term))
-                
-                # Inference
-                df_stream = pd.DataFrame([[l_amnt, term, i_rate, inst, a_inc, dti, 10, 20]],
-                                        columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
-                
-                pred = pipeline.predict(df_stream)
-                prob = pipeline.predict_proba(df_stream)[0][1]
-                decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
-                
-                # Create new record
-                new_record = pd.DataFrame({
-                    "Timestamp": [time.strftime("%H:%M:%S")],
-                    "App_ID": [app_id],
-                    "Req_Amount": [f"${l_amnt:,.0f}"],
-                    "Income": [f"${a_inc:,.0f}"],
-                    "AI_Decision": [decision],
-                    "Confidence": [f"{prob*100:.1f}%"]
-                })
-                
-                # Update UI table
-                st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10) # Keep last 10 records
-                table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
-                
-                time.sleep(1.5) # Simulate API network delay
+                # Stream row by row from the uploaded CSV
+                for index, row in df_test.iterrows():
+                    if not st.session_state.stream_active:
+                        break
+                    
+                    try:
+                        app_id = f"APP-{random.randint(10000, 99999)}"
+                        l_amnt = row['loan_amnt']
+                        a_inc = row['annual_inc']
+                        
+                        # Prepare row for prediction (matching pipeline columns)
+                        df_stream = pd.DataFrame([row])
+                        if 'loan_paid_back' in df_stream.columns:
+                            df_stream = df_stream.drop('loan_paid_back', axis=1)
+                            
+                        pred = pipeline.predict(df_stream)
+                        prob = pipeline.predict_proba(df_stream)[0][1]
+                        decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
+                        
+                        new_record = pd.DataFrame({
+                            "Timestamp": [time.strftime("%H:%M:%S")],
+                            "App_ID": [app_id],
+                            "Req_Amount": [f"${l_amnt:,.0f}"],
+                            "Income": [f"${a_inc:,.0f}"],
+                            "AI_Decision": [decision],
+                            "Confidence": [f"{prob*100:.1f}%"]
+                        })
+                        
+                        st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
+                        table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
+                        time.sleep(1.2) # API network delay simulation
+                        
+                    except Exception as e:
+                        st.error(f"Data format error in row {index}. Make sure columns match training data.")
+                        break
+            else:
+                # Fallback: Auto-generate if no file is uploaded
+                st.info("No file uploaded. Generating synthetic test data for stream...")
+                for i in range(20):
+                    if not st.session_state.stream_active:
+                        break
+                    app_id = f"APP-{random.randint(10000, 99999)}"
+                    l_amnt = random.uniform(2000, 40000)
+                    term = random.choice([36, 60])
+                    i_rate = random.uniform(5.0, 25.0)
+                    a_inc = random.uniform(30000, 150000)
+                    dti = random.uniform(5.0, 35.0)
+                    inst = (l_amnt * (i_rate / 1200)) / (1 - (1 + i_rate / 1200)**(-term))
+                    
+                    df_stream = pd.DataFrame([[l_amnt, term, i_rate, inst, a_inc, dti, 10, 20]],
+                                            columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+                    
+                    pred = pipeline.predict(df_stream)
+                    prob = pipeline.predict_proba(df_stream)[0][1]
+                    decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
+                    
+                    new_record = pd.DataFrame({
+                        "Timestamp": [time.strftime("%H:%M:%S")],
+                        "App_ID": [app_id],
+                        "Req_Amount": [f"${l_amnt:,.0f}"],
+                        "Income": [f"${a_inc:,.0f}"],
+                        "AI_Decision": [decision],
+                        "Confidence": [f"{prob*100:.1f}%"]
+                    })
+                    
+                    st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
+                    table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
+                    time.sleep(1.2)
 
             st.session_state.stream_active = False
             st.success("✅ Stream Session Completed.")
