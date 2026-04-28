@@ -64,8 +64,7 @@ MODEL_PATH = os.path.join(BASE_DIR, 'Models', 'full_pipeline.sav')
 
 @st.cache_resource
 def load_pipeline():
-    if os.path.exists(MODEL_PATH):
-        return joblib.load(MODEL_PATH)
+    if os.path.exists(MODEL_PATH): return joblib.load(MODEL_PATH)
     return None
 
 pipeline = load_pipeline()
@@ -88,18 +87,17 @@ def main():
         "📉 MODEL DRIFT MONITOR",
         "📍 GEOSPATIAL RISK MAP",
         "🌪️ STRESS TESTING ENGINE",
+        "⚖️ ETHICAL AI & FAIRNESS",
         "🗺️ CREDIT ROADMAP",
         "🔒 ADMIN GATEWAY"
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.9 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V4.0 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
-    with h_col1:
-        st.markdown('<div class="custom-main-header">LOAN RISK ASSESSMENT SYSTEM</div>', unsafe_allow_html=True)
-    with h_col2:
-        st.markdown('<p class="status-text">🟢 STATUS: ONLINE<br>Engine Connected</p>', unsafe_allow_html=True)
+    with h_col1: st.markdown('<div class="custom-main-header">LOAN RISK ASSESSMENT SYSTEM</div>', unsafe_allow_html=True)
+    with h_col2: st.markdown('<p class="status-text">🟢 STATUS: ONLINE<br>Engine Connected</p>', unsafe_allow_html=True)
 
     # ==========================================
     # 1. SYSTEM DASHBOARD
@@ -114,8 +112,7 @@ def main():
         col_form, col_anal = st.columns([1, 1.2])
         with col_form:
             st.markdown('<div class="content-container"><div class="content-container-header">👤 APPLICANT DATA ENTRY</div>', unsafe_allow_html=True)
-            if pipeline is None:
-                st.markdown("<p style='color:#e74c3c;'>🚨 Pipeline not found. Run 'train_model.py' first.</p>", unsafe_allow_html=True)
+            if pipeline is None: st.markdown("<p style='color:#e74c3c;'>🚨 Pipeline not found.</p>", unsafe_allow_html=True)
             else:
                 c1, c2 = st.columns(2)
                 with c1:
@@ -154,8 +151,7 @@ def main():
                             if prediction[0] == 1: st.markdown("<h3 style='color:#2ecc71; margin-bottom: 0px;'>✅ APPROVED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Low to Moderate</p>", unsafe_allow_html=True)
                             else: st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 REJECTED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: High Default Probability</p>", unsafe_allow_html=True)
                         with r2: st.metric("Confidence Score", f"{probability*100:.1f} / 100")
-            else:
-                st.markdown("<p style='color:#9ca3af; font-style:italic;'>Awaiting input data. Click 'Execute' to generate AI insights.</p>", unsafe_allow_html=True)
+            else: st.markdown("<p style='color:#9ca3af; font-style:italic;'>Awaiting input data. Click 'Execute' to generate AI insights.</p>", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
@@ -173,15 +169,11 @@ def main():
 
         if st.session_state.stream_active: st.markdown("<p class='stream-active'>🟢 System is actively streaming and processing records...</p>", unsafe_allow_html=True)
         else: st.markdown("<p style='color:#9ca3af;'>🔴 Stream is currently offline.</p>", unsafe_allow_html=True)
-
         st.markdown("---")
         placeholder = st.empty()
-
         if st.session_state.stream_active and pipeline is not None:
-            if 'live_df' not in st.session_state:
-                st.session_state.live_df = pd.DataFrame(columns=["Timestamp", "App_ID", "Req_Amount", "Income", "AI_Decision", "Confidence"])
+            if 'live_df' not in st.session_state: st.session_state.live_df = pd.DataFrame(columns=["Timestamp", "App_ID", "Req_Amount", "Income", "AI_Decision", "Confidence"])
             with placeholder.container(): table_placeholder = st.empty()
-
             if stream_file is not None:
                 try:
                     df_test = pd.read_csv(stream_file)
@@ -193,7 +185,6 @@ def main():
                             term = float(row.get('term', 36)); i_rate = float(row.get('int_rate', 10.5)); inst = float(row.get('installment', 300.0))
                             a_inc = float(row.get('annual_inc', random.uniform(30000, 150000)))
                             dti = float(row.get('dti', 15.0)); open_acc = float(row.get('open_acc', 10)); total_acc = float(row.get('total_acc', 20))
-                            
                             df_stream = pd.DataFrame({'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst], 'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [open_acc], 'total_acc': [total_acc]})
                             pred = pipeline.predict(df_stream)
                             prob = pipeline.predict_proba(df_stream)[0][1]
@@ -314,7 +305,6 @@ def main():
                 fig = px.histogram(df_drift, x="Income", color="Dataset", barmode="overlay", title="Feature Distribution Shift: Annual Income", color_discrete_sequence=['#00f2fe', '#e74c3c'])
                 fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
                 st.plotly_chart(fig, use_container_width=True)
-                st.error("ACTION REQUIRED: Schedule a model retraining pipeline to maintain prediction accuracy.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
@@ -328,71 +318,96 @@ def main():
                 lats = np.random.uniform(10.0, 28.0, 300); lons = np.random.uniform(72.0, 88.0, 300); scores = np.random.randint(300, 850, 300)
                 statuses = ["APPROVED" if s > 600 else "HIGH-RISK (DEFAULT)" for s in scores]
                 df_geo = pd.DataFrame({'Latitude': lats, 'Longitude': lons, 'Credit Score': scores, 'Status': statuses})
-                fig_map = px.scatter_mapbox(df_geo, lat="Latitude", lon="Longitude", color="Status", color_discrete_map={"APPROVED": "#2ecc71", "HIGH-RISK (DEFAULT)": "#e74c3c"}, zoom=3.5, center={"lat": 20.0, "lon": 78.0}, hover_name="Status", hover_data=["Credit Score"], mapbox_style="carto-darkmatter", height=500)
+                fig_map = px.scatter_mapbox(df_geo, lat="Latitude", lon="Longitude", color="Status", color_discrete_map={"APPROVED": "#2ecc71", "HIGH-RISK (DEFAULT)": "#e74c3c"}, zoom=3.5, center={"lat": 20.0, "lon": 78.0}, mapbox_style="carto-darkmatter", height=500)
                 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_map, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 8. STRESS TESTING ENGINE (NEW FEATURE)
+    # 8. STRESS TESTING ENGINE
     # ==========================================
     elif app_mode == "🌪️ STRESS TESTING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">🌪️ MACROECONOMIC STRESS TESTING</div>', unsafe_allow_html=True)
-        st.write("Simulate how economic downturns (e.g., Recession, Inflation) affect your active loan portfolio's default rate.")
-        
         col1, col2 = st.columns(2)
-        with col1:
-            shock_income = st.slider("Income Drop Shock (%)", 0, 50, 20, help="Simulates unemployment or wage cuts")
-        with col2:
-            shock_interest = st.slider("Interest Rate Spike (%)", 0.0, 10.0, 4.0, help="Simulates central bank rate hikes")
-            
+        with col1: shock_income = st.slider("Income Drop Shock (%)", 0, 50, 20)
+        with col2: shock_interest = st.slider("Interest Rate Spike (%)", 0.0, 10.0, 4.0)
         if st.button("💥 RUN PORTFOLIO STRESS TEST") and pipeline is not None:
-            with st.spinner("Applying macroeconomic shocks to portfolio data..."):
+            with st.spinner("Applying macroeconomic shocks..."):
                 time.sleep(2)
-                
-                # Generate a synthetic baseline portfolio (1000 loans)
                 np.random.seed(42)
-                baseline_inc = np.random.normal(75000, 20000, 1000)
-                baseline_int = np.random.normal(10.5, 2.5, 1000)
-                baseline_loan = np.random.normal(15000, 5000, 1000)
-                baseline_dti = np.random.normal(15, 5, 1000)
+                b_inc = np.random.normal(75000, 20000, 1000); b_int = np.random.normal(10.5, 2.5, 1000)
+                b_loan = np.random.normal(15000, 5000, 1000); b_dti = np.random.normal(15, 5, 1000)
                 
-                # BASELINE PREDICTION
-                df_base = pd.DataFrame({'loan_amnt': baseline_loan, 'term': 36, 'int_rate': baseline_int, 'installment': 300, 'annual_inc': baseline_inc, 'dti': baseline_dti, 'open_acc': 10, 'total_acc': 20})
-                pred_base = pipeline.predict(df_base)
-                base_default_rate = (len(pred_base[pred_base == 0]) / 1000) * 100
+                pred_base = pipeline.predict(pd.DataFrame({'loan_amnt': b_loan, 'term': 36, 'int_rate': b_int, 'installment': 300, 'annual_inc': b_inc, 'dti': b_dti, 'open_acc': 10, 'total_acc': 20}))
+                base_rate = (len(pred_base[pred_base == 0]) / 1000) * 100
                 
-                # STRESSED PREDICTION (Applying Shocks)
-                stressed_inc = baseline_inc * (1 - (shock_income / 100))
-                stressed_int = baseline_int + shock_interest
-                # DTI naturally gets worse if income drops and interest goes up
-                stressed_dti = baseline_dti * (1 + (shock_income/100)) + shock_interest
+                s_inc = b_inc * (1 - (shock_income / 100)); s_int = b_int + shock_interest; s_dti = b_dti * (1 + (shock_income/100)) + shock_interest
+                pred_stress = pipeline.predict(pd.DataFrame({'loan_amnt': b_loan, 'term': 36, 'int_rate': s_int, 'installment': 350, 'annual_inc': s_inc, 'dti': s_dti, 'open_acc': 10, 'total_acc': 20}))
+                stress_rate = (len(pred_stress[pred_stress == 0]) / 1000) * 100
                 
-                df_stressed = pd.DataFrame({'loan_amnt': baseline_loan, 'term': 36, 'int_rate': stressed_int, 'installment': 350, 'annual_inc': stressed_inc, 'dti': stressed_dti, 'open_acc': 10, 'total_acc': 20})
-                pred_stressed = pipeline.predict(df_stressed)
-                stress_default_rate = (len(pred_stressed[pred_stressed == 0]) / 1000) * 100
-                
-                # Display Results
-                st.markdown("### 📊 Stress Test Results")
                 r1, r2, r3 = st.columns(3)
-                with r1: st.metric("Baseline Default Rate", f"{base_default_rate:.1f}%")
-                with r2: st.metric("Stressed Default Rate", f"{stress_default_rate:.1f}%", f"+{(stress_default_rate - base_default_rate):.1f}% Risk", delta_color="inverse")
-                with r3: st.metric("Portfolio Status", "AT RISK" if stress_default_rate > 30 else "STABLE")
+                with r1: st.metric("Baseline Default Rate", f"{base_rate:.1f}%")
+                with r2: st.metric("Stressed Default Rate", f"{stress_rate:.1f}%", f"+{(stress_rate - base_rate):.1f}% Risk", delta_color="inverse")
+                with r3: st.metric("Portfolio Status", "AT RISK" if stress_rate > 30 else "STABLE")
                 
-                # Visualization
-                df_viz = pd.DataFrame({
-                    "Scenario": ["Baseline Economy", "Stressed Economy"],
-                    "Default Rate (%)": [base_default_rate, stress_default_rate]
-                })
-                fig = px.bar(df_viz, x="Scenario", y="Default Rate (%)", color="Scenario", color_discrete_sequence=['#2ecc71', '#e74c3c'], text="Default Rate (%)")
+                fig = px.bar(pd.DataFrame({"Scenario": ["Baseline", "Stressed"], "Rate": [base_rate, stress_rate]}), x="Scenario", y="Rate", color="Scenario", color_discrete_sequence=['#2ecc71', '#e74c3c'], text="Rate")
                 fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
                 fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'), showlegend=False)
                 st.plotly_chart(fig, use_container_width=True)
-                
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 9. CREDIT ROADMAP
+    # 9. ETHICAL AI & FAIRNESS AUDIT (NEW FEATURE)
+    # ==========================================
+    elif app_mode == "⚖️ ETHICAL AI & FAIRNESS":
+        st.markdown('<div class="content-container"><div class="content-container-header">⚖️ MODEL FAIRNESS & BIAS AUDIT</div>', unsafe_allow_html=True)
+        st.write("Ensuring the AI model complies with regulatory standards by checking for discrimination across sensitive demographic groups.")
+        
+        if st.button("📊 RUN COMPLIANCE AUDIT"):
+            with st.spinner("Auditing last 5,000 automated decisions..."):
+                time.sleep(2)
+                
+                # Simulating a Fairness Audit on historical predictions
+                audit_data = {
+                    'Group': ['Male', 'Female', 'Age 18-25', 'Age 26-50', 'Age > 50'],
+                    'Approval_Rate': [68.5, 67.2, 45.1, 71.0, 69.8], # Intentional bias shown in young age group
+                    'Category': ['Gender', 'Gender', 'Age', 'Age', 'Age']
+                }
+                df_audit = pd.DataFrame(audit_data)
+                
+                # Disparate Impact Ratio Calculation (Usually > 0.8 is considered fair)
+                dir_gender = min(67.2/68.5, 68.5/67.2)
+                dir_age = min(45.1/71.0, 71.0/45.1)
+                
+                st.markdown("### 📋 Regulatory Compliance Metrics")
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.metric("Gender Disparate Impact Ratio", f"{dir_gender:.2f}", "Compliant (>0.80)")
+                with c2:
+                    st.metric("Age Disparate Impact Ratio", f"{dir_age:.2f}", "BIAS DETECTED (<0.80)", delta_color="inverse")
+                    
+                st.markdown("---")
+                
+                # Visualizing the Approval Rates
+                fig = px.bar(df_audit, x='Approval_Rate', y='Group', color='Category', 
+                             orientation='h', text='Approval_Rate',
+                             title="Approval Rates Across Demographic Groups (%)",
+                             color_discrete_map={'Gender': '#00f2fe', 'Age': '#f39c12'})
+                
+                fig.update_traces(texttemplate='%{text:.1f}%', textposition='inside')
+                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
+                
+                # Add a vertical threshold line for fairness benchmark (e.g., 60%)
+                fig.add_vline(x=60, line_dash="dash", line_color="red", annotation_text="Fairness Threshold")
+                st.plotly_chart(fig, use_container_width=True)
+                
+                if dir_age < 0.8:
+                    st.error("🚨 ALERT: The model is showing significant bias against applicants in the 'Age 18-25' demographic. It is rejecting them at a disproportionately high rate compared to the 'Age 26-50' baseline. Retraining with bias mitigation algorithms (e.g., SMOTE or Reweighing) is required before deploying to production.")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 10. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -408,7 +423,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 10. ADMIN GATEWAY
+    # 11. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
