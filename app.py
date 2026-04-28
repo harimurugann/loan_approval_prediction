@@ -84,7 +84,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.0 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.2 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -141,13 +141,12 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 2. LIVE API STREAM SIMULATION (UPDATED FOR TESTING DATA)
+    # 2. LIVE API STREAM SIMULATION (2D ARRAY FIX)
     # ==========================================
     elif app_mode == "🌐 LIVE API STREAM":
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
         st.write("Upload a testing dataset (CSV). The system will simulate streaming this data row-by-row through the ML API.")
 
-        # File uploader for Testing Data
         stream_file = st.file_uploader("Upload Testing Data for Stream (CSV)", type="csv")
         
         if 'stream_active' not in st.session_state:
@@ -178,47 +177,62 @@ def main():
                 st.write("Live Data Feed:")
                 table_placeholder = st.empty()
 
-            # Check if user uploaded a file
             if stream_file is not None:
-                df_test = pd.read_csv(stream_file)
-                
-                # Stream row by row from the uploaded CSV
-                for index, row in df_test.iterrows():
-                    if not st.session_state.stream_active:
-                        break
+                try:
+                    df_test = pd.read_csv(stream_file)
                     
-                    try:
-                        app_id = f"APP-{random.randint(10000, 99999)}"
-                        l_amnt = row['loan_amnt']
-                        a_inc = row['annual_inc']
+                    for index, row in df_test.iterrows():
+                        if not st.session_state.stream_active:
+                            break
                         
-                        # Prepare row for prediction (matching pipeline columns)
-                        df_stream = pd.DataFrame([row])
-                        if 'loan_paid_back' in df_stream.columns:
-                            df_stream = df_stream.drop('loan_paid_back', axis=1)
+                        try:
+                            app_id = f"APP-{random.randint(10000, 99999)}"
                             
-                        pred = pipeline.predict(df_stream)
-                        prob = pipeline.predict_proba(df_stream)[0][1]
-                        decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
-                        
-                        new_record = pd.DataFrame({
-                            "Timestamp": [time.strftime("%H:%M:%S")],
-                            "App_ID": [app_id],
-                            "Req_Amount": [f"${l_amnt:,.0f}"],
-                            "Income": [f"${a_inc:,.0f}"],
-                            "AI_Decision": [decision],
-                            "Confidence": [f"{prob*100:.1f}%"]
-                        })
-                        
-                        st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
-                        table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
-                        time.sleep(1.2) # API network delay simulation
-                        
-                    except Exception as e:
-                        st.error(f"Data format error in row {index}. Make sure columns match training data.")
-                        break
+                            # Safely extract values with fallback defaults if CSV is corrupted/empty
+                            l_amnt = float(row.get('loan_amnt', random.uniform(2000, 40000)) or random.uniform(2000, 40000))
+                            term = float(row.get('term', 36) or 36)
+                            i_rate = float(row.get('int_rate', 10.5) or 10.5)
+                            inst = float(row.get('installment', 300.0) or 300.0)
+                            a_inc = float(row.get('annual_inc', random.uniform(30000, 150000)) or 75000.0)
+                            dti = float(row.get('dti', 15.0) or 15.0)
+                            open_acc = float(row.get('open_acc', 10) or 10)
+                            total_acc = float(row.get('total_acc', 20) or 20)
+                            
+                            # CRITICAL FIX: Creating a strict 2D DataFrame explicitly to prevent 1D Array errors
+                            df_stream = pd.DataFrame({
+                                'loan_amnt': [l_amnt],
+                                'term': [term],
+                                'int_rate': [i_rate],
+                                'installment': [inst],
+                                'annual_inc': [a_inc],
+                                'dti': [dti],
+                                'open_acc': [open_acc],
+                                'total_acc': [total_acc]
+                            })
+                                
+                            pred = pipeline.predict(df_stream)
+                            prob = pipeline.predict_proba(df_stream)[0][1]
+                            decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
+                            
+                            new_record = pd.DataFrame({
+                                "Timestamp": [time.strftime("%H:%M:%S")],
+                                "App_ID": [app_id],
+                                "Req_Amount": [f"${l_amnt:,.0f}"],
+                                "Income": [f"${a_inc:,.0f}"],
+                                "AI_Decision": [decision],
+                                "Confidence": [f"{prob*100:.1f}%"]
+                            })
+                            
+                            st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
+                            table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
+                            time.sleep(1.2) 
+                            
+                        except Exception as inner_e:
+                            st.error(f"Error processing row {index}. Reason: {str(inner_e)}")
+                            break
+                except pd.errors.EmptyDataError:
+                    st.error("🚨 Error: The uploaded CSV file is completely EMPTY. Please use the Sample Template.")
             else:
-                # Fallback: Auto-generate if no file is uploaded
                 st.info("No file uploaded. Generating synthetic test data for stream...")
                 for i in range(20):
                     if not st.session_state.stream_active:
@@ -231,8 +245,17 @@ def main():
                     dti = random.uniform(5.0, 35.0)
                     inst = (l_amnt * (i_rate / 1200)) / (1 - (1 + i_rate / 1200)**(-term))
                     
-                    df_stream = pd.DataFrame([[l_amnt, term, i_rate, inst, a_inc, dti, 10, 20]],
-                                            columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+                    # Ensure 2D DataFrame is constructed
+                    df_stream = pd.DataFrame({
+                        'loan_amnt': [l_amnt],
+                        'term': [term],
+                        'int_rate': [i_rate],
+                        'installment': [inst],
+                        'annual_inc': [a_inc],
+                        'dti': [dti],
+                        'open_acc': [10.0],
+                        'total_acc': [20.0]
+                    })
                     
                     pred = pipeline.predict(df_stream)
                     prob = pipeline.predict_proba(df_stream)[0][1]
