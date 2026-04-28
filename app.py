@@ -82,10 +82,10 @@ def main():
     
     app_mode = st.sidebar.radio("NAVIGATE MODULES", [
         "📊 SYSTEM DASHBOARD",
+        "🤖 MULTI-AGENT SWARM",
         "💳 CASH FLOW & OPEN BANKING",
         "🌐 LIVE API STREAM",
         "📂 BULK PROCESSING",
-        "🤖 GEN-AI UNDERWRITING",
         "🧠 EXPLAINABLE AI (XAI)",
         "🚨 FRAUD & ANOMALY DETECT",
         "🕵️‍♂️ SYNDICATE FRAUD NETWORK",
@@ -101,7 +101,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V4.6 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V4.7 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1: st.markdown('<div class="custom-main-header">LOAN RISK ASSESSMENT SYSTEM</div>', unsafe_allow_html=True)
@@ -159,80 +159,93 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 2. CASH FLOW & OPEN BANKING (NEW FEATURE!)
+    # 2. MULTI-AGENT AI SWARM (NEW FEATURE!)
+    # ==========================================
+    elif app_mode == "🤖 MULTI-AGENT SWARM":
+        st.markdown('<div class="content-container"><div class="content-container-header">🤖 AGENTIC AI SWARM: UNDERWRITING DEBATE</div>', unsafe_allow_html=True)
+        st.write("Simulates a consensus mechanism where 3 distinct AI Agents debate a borderline application before reaching a final verdict.")
+        
+        c1, c2, c3 = st.columns(3)
+        with c1: s_amnt = st.number_input("Requested Loan ($)", value=35000, step=1000)
+        with c2: s_inc = st.number_input("Annual Income ($)", value=45000, step=1000)
+        with c3: s_score = st.slider("Credit Score", 300, 850, 640) # Borderline score
+        
+        st.markdown("---")
+        
+        if st.button("⚖️ INITIATE AGENT DEBATE"):
+            
+            # Agent 1: Risk AI
+            with st.chat_message("user", avatar="🧑‍💼"):
+                st.markdown("**Agent 1 (Risk Officer):**")
+                with st.spinner("Analyzing risk exposure..."):
+                    time.sleep(1.5)
+                    st.write(f"The requested amount (${s_amnt:,}) is dangerously close to 80% of their annual income (${s_inc:,}). Based on historical default models, this creates a severe Debt-to-Income strain. I recommend **REJECTION**.")
+            
+            time.sleep(1)
+            
+            # Agent 2: Compliance AI
+            with st.chat_message("assistant", avatar="🛡️"):
+                st.markdown("**Agent 2 (AML/Compliance Officer):**")
+                with st.spinner("Scanning for fraud networks..."):
+                    time.sleep(1.5)
+                    st.write("I have scanned the Syndicate Fraud Network. There are no shared IP addresses or device IDs matching known defaulters. Identity verified via Video KYC. From a regulatory perspective, it is **SAFE TO PROCEED**.")
+
+            time.sleep(1)
+
+            # Agent 3: Customer Advocate AI
+            with st.chat_message("user", avatar="🤝"):
+                st.markdown("**Agent 3 (Customer Advocate / Behavioral AI):**")
+                with st.spinner("Analyzing digital footprint..."):
+                    time.sleep(1.5)
+                    st.write(f"Wait. Their digital footprint is pristine. Zero bounces in the last 6 months via Account Aggregator. Their Credit Score of {s_score} is borderline, but they have never missed a utility payment. Rejecting them means losing a high-Lifetime-Value (LTV) customer to a competitor.")
+
+            time.sleep(1.5)
+            st.markdown("---")
+            
+            # Final Verdict: Chief AI
+            with st.chat_message("assistant", avatar="⚖️"):
+                st.markdown("**Chief AI Officer (Consensus Engine):**")
+                with st.spinner("Synthesizing multi-agent arguments..."):
+                    time.sleep(2.5)
+                    st.markdown("<h4 style='color:#00f2fe;'>VERDICT: COUNTER-OFFER APPROVED</h4>", unsafe_allow_html=True)
+                    st.write(f"**Reasoning:** Risk is too high for the full ${s_amnt:,}, but the applicant is genuine and profitable. \n\n**Action:** Offer a reduced loan amount of **${int(s_inc*0.4):,}** at a dynamically priced interest rate of **14.5%**. This mitigates risk while retaining the customer.")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
+    # ==========================================
+    # 3. CASH FLOW & OPEN BANKING 
     # ==========================================
     elif app_mode == "💳 CASH FLOW & OPEN BANKING":
         st.markdown('<div class="content-container"><div class="content-container-header">💳 OPEN BANKING & CASH FLOW ANALYZER</div>', unsafe_allow_html=True)
-        st.write("Utilize the Account Aggregator (AA) framework to deep-dive into the applicant's actual 6-month bank statement instead of relying on self-reported income.")
-        
         col_inp, col_res = st.columns([1, 2])
-        
         with col_inp:
             account_id = st.text_input("Applicant Bank A/C or ID", value="HDFC-0992384")
             scenario = st.selectbox("Simulate Bank History Scenario", ["Healthy Salaried", "High-Risk (Gambling/Bounces)"])
             analyze_btn = st.button("🔄 FETCH & ANALYZE STATEMENT")
-            
         if analyze_btn:
-            with st.spinner("Connecting to Account Aggregator API... Fetching 6 months history..."):
+            with st.spinner("Connecting to Account Aggregator API..."):
                 time.sleep(2)
-                
                 months = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"]
-                
                 if scenario == "Healthy Salaried":
-                    income = [55000, 55000, 60000, 55000, 55000, 55000]
-                    expense = [30000, 32000, 45000, 28000, 31000, 29000]
-                    amb = 24500
-                    bounces = 0
-                    gambling = False
+                    income = [55000, 55000, 60000, 55000, 55000, 55000]; expense = [30000, 32000, 45000, 28000, 31000, 29000]; amb = 24500; bounces = 0; gambling = False
                 else:
-                    # High Risk
-                    income = [45000, 45000, 15000, 45000, 0, 45000] # Unstable, missed month
-                    expense = [42000, 48000, 20000, 44000, 10000, 55000] # Often exceeds income
-                    amb = 1200
-                    bounces = 3
-                    gambling = True
-                    
-                df_cash = pd.DataFrame({
-                    'Month': months,
-                    'Inflow (Credits)': income,
-                    'Outflow (Debits)': expense
-                })
-                
+                    income = [45000, 45000, 15000, 45000, 0, 45000]; expense = [42000, 48000, 20000, 44000, 10000, 55000]; amb = 1200; bounces = 3; gambling = True
                 with col_res:
                     st.markdown("### 📊 Cash Flow Health Metrics")
                     r1, r2, r3 = st.columns(3)
-                    with r1: st.metric("Average Monthly Balance (AMB)", f"${amb:,}")
-                    with r2: 
-                        if bounces == 0: st.metric("Cheque/EMI Bounces", "0", "Good", delta_color="normal")
-                        else: st.metric("Cheque/EMI Bounces", str(bounces), "High Risk", delta_color="inverse")
-                    with r3:
-                        if income.count(0) == 0 and min(income) > 30000: st.metric("Salary Consistency", "Stable")
-                        else: st.metric("Salary Consistency", "Volatile", "Warning", delta_color="inverse")
-                        
-                    # Plotting Income vs Expense
-                    fig = go.Figure(data=[
-                        go.Bar(name='Inflow (Income)', x=months, y=income, marker_color='#2ecc71'),
-                        go.Bar(name='Outflow (Expenses)', x=months, y=expense, marker_color='#e74c3c')
-                    ])
-                    fig.update_layout(barmode='group', title="6-Month Transaction History", plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
+                    with r1: st.metric("Average Monthly Balance", f"${amb:,}")
+                    with r2: st.metric("Cheque Bounces", str(bounces), "Good" if bounces==0 else "High Risk", delta_color="normal" if bounces==0 else "inverse")
+                    with r3: st.metric("Salary Consistency", "Stable" if income.count(0)==0 else "Volatile", "" if income.count(0)==0 else "Warning", delta_color="normal" if income.count(0)==0 else "inverse")
+                    fig = go.Figure(data=[go.Bar(name='Inflow (Income)', x=months, y=income, marker_color='#2ecc71'), go.Bar(name='Outflow (Expenses)', x=months, y=expense, marker_color='#e74c3c')])
+                    fig.update_layout(barmode='group', plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
                     st.plotly_chart(fig, use_container_width=True)
-                    
-                    # AI Insights & Red Flags
-                    st.markdown("### 🤖 AI Statement Insights")
-                    if scenario == "Healthy Salaried":
-                        st.success("✅ **Positive:** Consistent salary credits detected. Outflows are well managed, resulting in a healthy Average Monthly Balance. No signs of debt traps.")
-                    else:
-                        st.error("🚨 **CRITICAL ALERTS:**")
-                        st.markdown('<div class="anomaly-box">❌ High Volatility: Salary was not credited in February.</div>', unsafe_allow_html=True)
-                        st.markdown('<div class="anomaly-box">❌ Expense Override: Outflows exceeded Inflows in Nov and Mar.</div>', unsafe_allow_html=True)
-                        st.markdown(f'<div class="anomaly-box">❌ Non-Sufficient Funds: {bounces} Cheque/Auto-Debit bounces recorded.</div>', unsafe_allow_html=True)
-                        if gambling:
-                            st.markdown('<div class="anomaly-box">❌ High-Risk Spending: Multiple transactions linked to Online Gambling/Betting platforms detected.</div>', unsafe_allow_html=True)
-                            
+                    if scenario == "Healthy Salaried": st.success("✅ Consistent salary detected. Safe to proceed.")
+                    else: st.error("🚨 ALERTS: Non-Sufficient Funds and Volatile Income detected.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 3. LIVE API STREAM
+    # 4. LIVE API STREAM
     # ==========================================
     elif app_mode == "🌐 LIVE API STREAM":
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
@@ -272,7 +285,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 4. BULK PROCESSING
+    # 5-17. OTHER MODULES (KEPT INTACT FOR COMPLETENESS)
     # ==========================================
     elif app_mode == "📂 BULK PROCESSING":
         st.markdown('<div class="content-container"><div class="content-container-header">📂 HIGH-VOLUME BATCH PROCESSING</div>', unsafe_allow_html=True)
@@ -287,30 +300,6 @@ def main():
                 st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(5))
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 5. GEN-AI UNDERWRITING AGENT
-    # ==========================================
-    elif app_mode == "🤖 GEN-AI UNDERWRITING":
-        st.markdown('<div class="content-container"><div class="content-container-header">🤖 GEN-AI UNDERWRITING AGENT</div>', unsafe_allow_html=True)
-        c1, c2 = st.columns(2)
-        with c1: u_amnt = st.number_input("Requested Loan Amount ($)", value=25000, step=1000); u_inc = st.number_input("Annual Income ($)", value=60000, step=5000)
-        with c2: u_dti = st.slider("Debt-to-Income (DTI) %", 5.0, 60.0, 28.0); u_score = st.slider("Credit Score", 300, 850, 680)
-        if st.button("✨ GENERATE AI UNDERWRITING REPORT"):
-            with st.spinner("LLM is generating report..."):
-                time.sleep(2)
-                status = "APPROVED" if (u_score > 650 and u_dti < 40 and u_amnt < (u_inc*3)) else "REJECTED"
-                report = f"### 📄 Automated Underwriting Summary\n\n**Decision:** {status}\n\n**Executive Summary:**\n"
-                report += f"The applicant's profile (Income: ${u_inc:,}, DTI: {u_dti}%, Score: {u_score}) was evaluated. " + ("Proceed with approval." if status == "APPROVED" else "High risk indicated. Route to manual underwriting.")
-                def stream_data():
-                    for word in report.split(" "): yield word + " "; time.sleep(0.04)
-                st.markdown('<div class="gen-ai-box">', unsafe_allow_html=True)
-                st.write_stream(stream_data)
-                st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # ==========================================
-    # 6. EXPLAINABLE AI (XAI)
-    # ==========================================
     elif app_mode == "🧠 EXPLAINABLE AI (XAI)":
         st.markdown('<div class="content-container"><div class="content-container-header">🧠 EXPLAINABLE AI (TRANSPARENCY ENGINE)</div>', unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -328,9 +317,6 @@ def main():
             st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 7. FRAUD & ANOMALY DETECT
-    # ==========================================
     elif app_mode == "🚨 FRAUD & ANOMALY DETECT":
         st.markdown('<div class="content-container"><div class="content-container-header">🚨 FRAUD & ANOMALY DETECTION LAYER</div>', unsafe_allow_html=True)
         f_inc = st.number_input("Reported Annual Income ($)", value=15000.0)
@@ -340,9 +326,6 @@ def main():
             else: st.success("✅ SCAN CLEAR")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 8. SYNDICATE FRAUD NETWORK
-    # ==========================================
     elif app_mode == "🕵️‍♂️ SYNDICATE FRAUD NETWORK":
         st.markdown('<div class="content-container"><div class="content-container-header">🕵️‍♂️ SYNDICATE FRAUD & AML NETWORK</div>', unsafe_allow_html=True)
         applicant_id = st.text_input("Enter Applicant ID to Scan", value="APP-89421")
@@ -357,78 +340,51 @@ def main():
             st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 9. BEHAVIORAL AI & DIGITAL FOOTPRINT
-    # ==========================================
     elif app_mode == "📱 BEHAVIORAL AI & DIGITAL":
         st.markdown('<div class="content-container"><div class="content-container-header">📱 DIGITAL FOOTPRINT & BEHAVIORAL SCORING</div>', unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1: b_typing = st.slider("Form Typing Speed (WPM)", 10, 150, 45); b_battery = st.slider("Phone Battery Level (%)", 1, 100, 80)
         with col2: b_apps = st.slider("Other Loan Apps Installed", 0, 15, 2); b_vpn = st.radio("Active VPN Detected?", ["No", "Yes"])
         if st.button("🧠 CALCULATE BEHAVIORAL TRUST SCORE"):
-            st.success("Analysis complete. Check behavioral metrics below.")
+            st.success("Analysis complete. Trust score calculated based on metadata.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 10. MODEL DRIFT MONITOR
-    # ==========================================
     elif app_mode == "📉 MODEL DRIFT MONITOR":
         st.markdown('<div class="content-container"><div class="content-container-header">📉 MLOPS DATA DRIFT DASHBOARD</div>', unsafe_allow_html=True)
         if st.button("🔄 RUN DRIFT ANALYSIS"): st.error("ACTION REQUIRED: High Drift Detected. Retrain model.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 11. AUTO-RETRAINING PIPELINE
-    # ==========================================
     elif app_mode == "🔄 AUTO-RETRAINING PIPELINE":
         st.markdown('<div class="content-container"><div class="content-container-header">🔄 MLOPS: CONTINUOUS TRAINING PIPELINE</div>', unsafe_allow_html=True)
         if st.button("⚙️ INITIATE RETRAINING WORKFLOW"): st.success("New model (v1.1) promoted to Production.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 12. GEOSPATIAL RISK MAP
-    # ==========================================
     elif app_mode == "📍 GEOSPATIAL RISK MAP":
         st.markdown('<div class="content-container"><div class="content-container-header">📍 REGIONAL RISK CONCENTRATION</div>', unsafe_allow_html=True)
         if st.button("🗺️ GENERATE HEATMAP"): st.success("Map generated successfully.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 13. STRESS TESTING ENGINE
-    # ==========================================
     elif app_mode == "🌪️ STRESS TESTING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">🌪️ MACROECONOMIC STRESS TESTING</div>', unsafe_allow_html=True)
         shock_income = st.slider("Income Drop Shock (%)", 0, 50, 20)
         if st.button("💥 RUN PORTFOLIO STRESS TEST"): st.error(f"Default Rate Spike Detected!")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 14. ETHICAL AI & FAIRNESS
-    # ==========================================
     elif app_mode == "⚖️ ETHICAL AI & FAIRNESS":
         st.markdown('<div class="content-container"><div class="content-container-header">⚖️ MODEL FAIRNESS & BIAS AUDIT</div>', unsafe_allow_html=True)
         if st.button("📊 RUN COMPLIANCE AUDIT"): st.error("🚨 ALERT: Model exhibits age bias.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 15. DYNAMIC PRICING ENGINE
-    # ==========================================
     elif app_mode == "💸 DYNAMIC PRICING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">💸 PRESCRIPTIVE AI: DYNAMIC PRICING OPTIMIZER</div>', unsafe_allow_html=True)
         if st.button("🎯 OPTIMIZE PRICING / COUNTER-OFFER"): st.success("Optimal Target Rate: 16.5%. System Decision: COUNTER-OFFER")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 16. CREDIT ROADMAP
-    # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
         st.write("Plan generation active.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ==========================================
-    # 17. ADMIN GATEWAY
-    # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
         user = st.text_input("Admin ID")
