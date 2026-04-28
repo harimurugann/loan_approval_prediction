@@ -86,12 +86,13 @@ def main():
         "🧠 EXPLAINABLE AI (XAI)",
         "🚨 FRAUD & ANOMALY DETECT",
         "📉 MODEL DRIFT MONITOR",
+        "📍 GEOSPATIAL RISK MAP",
         "🗺️ CREDIT ROADMAP",
         "🔒 ADMIN GATEWAY"
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.6 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.7 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -317,43 +318,63 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 6. MODEL DRIFT MONITOR (NEW MLOPS FEATURE)
+    # 6. MODEL DRIFT MONITOR
     # ==========================================
     elif app_mode == "📉 MODEL DRIFT MONITOR":
         st.markdown('<div class="content-container"><div class="content-container-header">📉 MLOPS DATA DRIFT DASHBOARD</div>', unsafe_allow_html=True)
-        st.write("Compare the original training data distribution (Baseline) against live production data (Current Stream) to detect Model Degradation.")
-        
         col1, col2, col3 = st.columns(3)
         with col1: st.metric("Baseline Mean Income", "$71,500")
         with col2: st.metric("Current Stream Mean", "$95,200", "+33.1%", delta_color="inverse")
         with col3: st.metric("PSI Score (Drift)", "0.24", "High Drift", delta_color="inverse")
         
         st.markdown("---")
-        
         if st.button("🔄 RUN DRIFT ANALYSIS"):
             with st.spinner("Calculating Population Stability Index (PSI)..."):
                 time.sleep(1.5)
-                # Synthetic distributions to show drift in Annual Income
                 baseline_data = np.random.normal(70000, 15000, 1000)
-                current_data = np.random.normal(95000, 20000, 1000) # Shifted mean
-                
-                df_drift = pd.DataFrame({
-                    'Income': np.concatenate([baseline_data, current_data]),
-                    'Dataset': ['Training (Baseline)']*1000 + ['Production (Current)']*1000
-                })
-                
-                fig = px.histogram(df_drift, x="Income", color="Dataset", barmode="overlay", 
-                                   title="Feature Distribution Shift: Annual Income",
-                                   color_discrete_sequence=['#00f2fe', '#e74c3c'])
+                current_data = np.random.normal(95000, 20000, 1000)
+                df_drift = pd.DataFrame({'Income': np.concatenate([baseline_data, current_data]), 'Dataset': ['Training (Baseline)']*1000 + ['Production (Current)']*1000})
+                fig = px.histogram(df_drift, x="Income", color="Dataset", barmode="overlay", title="Feature Distribution Shift: Annual Income", color_discrete_sequence=['#00f2fe', '#e74c3c'])
                 fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
                 st.plotly_chart(fig, use_container_width=True)
-                
-                st.warning("⚠️ High Drift Detected in 'Annual Income' and 'DTI' features. The current production data varies significantly from the data used during training.")
                 st.error("ACTION REQUIRED: Schedule a model retraining pipeline to maintain prediction accuracy.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 7. CREDIT ROADMAP
+    # 7. GEOSPATIAL RISK MAP (NEW FEATURE)
+    # ==========================================
+    elif app_mode == "📍 GEOSPATIAL RISK MAP":
+        st.markdown('<div class="content-container"><div class="content-container-header">📍 REGIONAL RISK CONCENTRATION</div>', unsafe_allow_html=True)
+        st.write("Analyze geographic distribution of loan approvals and high-risk defaults across the country.")
+        
+        if st.button("🗺️ GENERATE HEATMAP"):
+            with st.spinner("Plotting geographical intelligence..."):
+                time.sleep(1.5)
+                # Synthesizing dummy map data covering Indian coordinates (approx bounds: Lat 8-28, Lon 70-90)
+                lats = np.random.uniform(10.0, 28.0, 300)
+                lons = np.random.uniform(72.0, 88.0, 300)
+                scores = np.random.randint(300, 850, 300)
+                
+                # Assign status based on random score logic
+                statuses = ["APPROVED" if s > 600 else "HIGH-RISK (DEFAULT)" for s in scores]
+                
+                df_geo = pd.DataFrame({'Latitude': lats, 'Longitude': lons, 'Credit Score': scores, 'Status': statuses})
+                
+                # Plotly Mapbox using Dark theme mapping
+                fig_map = px.scatter_mapbox(df_geo, lat="Latitude", lon="Longitude", color="Status",
+                                            color_discrete_map={"APPROVED": "#2ecc71", "HIGH-RISK (DEFAULT)": "#e74c3c"},
+                                            zoom=3.5, center={"lat": 20.0, "lon": 78.0},
+                                            hover_name="Status", hover_data=["Credit Score"],
+                                            mapbox_style="carto-darkmatter", height=500)
+                
+                fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig_map, use_container_width=True)
+                
+                st.info("💡 Insight: Notice the concentration of 'Red' nodes. Areas with dense high-risk clusters may require tighter local credit policies.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 8. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -369,7 +390,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 8. ADMIN GATEWAY
+    # 9. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
