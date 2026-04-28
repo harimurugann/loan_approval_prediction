@@ -52,7 +52,7 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #0a0a0a; }
     .status-text { text-align: right; color: #2ecc71; font-weight: 600; font-size: 0.75rem; letter-spacing: 1px; }
     .roadmap-box { background-color: #1a1c24; border-left: 4px solid #00f2fe; padding: 15px; margin-top: 15px; border-radius: 4px; }
-    .anomaly-box { background-color: #2c0b0e; border-left: 4px solid #e74c3c; padding: 15px; margin-top: 10px; border-radius: 4px; color: #ffcccc;}
+    .anomaly-box { background-color: #2c0b0e; border-left: 3px solid #e74c3c; padding: 8px; margin-bottom: 5px; border-radius: 4px; color: #ffcccc; font-size: 0.85rem;}
     .stream-active { color: #00f2fe; font-weight: bold; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
@@ -92,7 +92,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.7 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.8 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -101,7 +101,7 @@ def main():
         st.markdown('<p class="status-text">🟢 STATUS: ONLINE<br>Engine Connected</p>', unsafe_allow_html=True)
 
     # ==========================================
-    # 1. SYSTEM DASHBOARD
+    # 1. SYSTEM DASHBOARD (BUG FIXED)
     # ==========================================
     if app_mode == "📊 SYSTEM DASHBOARD":
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
@@ -129,21 +129,45 @@ def main():
         with col_anal:
             st.markdown('<div class="content-container"><div class="content-container-header">📈 AI INFERENCE RESULTS</div>', unsafe_allow_html=True)
             if pipeline is not None and 'submit' in locals() and submit:
-                with st.spinner("Executing risk analysis..."):
+                with st.spinner("Running Anomaly Scan & AI Inference..."):
                     time.sleep(1)
-                    installment_val = (loan_amnt * (int_rate / 1200)) / (1 - (1 + int_rate / 1200)**(-term))
-                    df_input = pd.DataFrame([[loan_amnt, term, int_rate, installment_val, annual_inc, 15.0, 10, 20]],
-                                            columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
-                    prediction = pipeline.predict(df_input)
-                    probability = pipeline.predict_proba(df_input)[0][1] 
                     
+                    # 1. Dynamic Metric Calculations
+                    monthly_inc = annual_inc / 12 if annual_inc > 0 else 1
+                    installment_val = (loan_amnt * (int_rate / 1200)) / (1 - (1 + int_rate / 1200)**(-term))
+                    dynamic_dti = (installment_val / monthly_inc) * 100
+                    
+                    # 2. Integrated Fraud & Anomaly Block
+                    fraud_flags = []
+                    if loan_amnt > (annual_inc * 4): 
+                        fraud_flags.append(f"Loan Amt ({loan_amnt}) > 4x Annual Income ({annual_inc}).")
+                    if dynamic_dti > 50.0: 
+                        fraud_flags.append(f"Critical DTI: {dynamic_dti:.1f}% (Exceeds 50% limit).")
+                        
                     r1, r2 = st.columns(2)
-                    with r1:
-                        if prediction[0] == 1:
-                            st.markdown("<h3 style='color:#2ecc71; margin-bottom: 0px;'>✅ APPROVED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Low to Moderate</p>", unsafe_allow_html=True)
-                        else:
-                            st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 REJECTED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: High Default Probability</p>", unsafe_allow_html=True)
-                    with r2: st.metric("Confidence Score", f"{probability*100:.1f} / 100")
+                    
+                    if len(fraud_flags) > 0:
+                        # Reject immediately without ML Prediction
+                        with r1:
+                            st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 SYSTEM REJECTED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Blocked by Security Rules</p>", unsafe_allow_html=True)
+                            for flag in fraud_flags:
+                                st.markdown(f'<div class="anomaly-box">❌ {flag}</div>', unsafe_allow_html=True)
+                        with r2: 
+                            st.metric("Confidence Score", "0.0 / 100")
+                    else:
+                        # 3. Safe to proceed to ML Model
+                        df_input = pd.DataFrame([[loan_amnt, term, int_rate, installment_val, annual_inc, dynamic_dti, 10, 20]],
+                                                columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+                        prediction = pipeline.predict(df_input)
+                        probability = pipeline.predict_proba(df_input)[0][1] 
+                        
+                        with r1:
+                            if prediction[0] == 1:
+                                st.markdown("<h3 style='color:#2ecc71; margin-bottom: 0px;'>✅ APPROVED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Low to Moderate</p>", unsafe_allow_html=True)
+                            else:
+                                st.markdown("<h3 style='color:#e74c3c; margin-bottom: 0px;'>🚫 REJECTED</h3><p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: High Default Probability</p>", unsafe_allow_html=True)
+                        with r2: 
+                            st.metric("Confidence Score", f"{probability*100:.1f} / 100")
             else:
                 st.markdown("<p style='color:#9ca3af; font-style:italic;'>Awaiting input data. Click 'Execute' to generate AI insights.</p>", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -154,7 +178,6 @@ def main():
     elif app_mode == "🌐 LIVE API STREAM":
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
         stream_file = st.file_uploader("Upload Testing Data for Stream (CSV)", type="csv")
-        
         if 'stream_active' not in st.session_state: st.session_state.stream_active = False
 
         c1, c2, c3 = st.columns([1, 1, 3])
@@ -163,10 +186,8 @@ def main():
         with c2:
             if st.button("⏹️ STOP STREAM"): st.session_state.stream_active = False
 
-        if st.session_state.stream_active:
-            st.markdown("<p class='stream-active'>🟢 System is actively streaming and processing records...</p>", unsafe_allow_html=True)
-        else:
-            st.markdown("<p style='color:#9ca3af;'>🔴 Stream is currently offline.</p>", unsafe_allow_html=True)
+        if st.session_state.stream_active: st.markdown("<p class='stream-active'>🟢 System is actively streaming and processing records...</p>", unsafe_allow_html=True)
+        else: st.markdown("<p style='color:#9ca3af;'>🔴 Stream is currently offline.</p>", unsafe_allow_html=True)
 
         st.markdown("---")
         placeholder = st.empty()
@@ -192,19 +213,12 @@ def main():
                             open_acc = float(row.get('open_acc', 10))
                             total_acc = float(row.get('total_acc', 20))
                             
-                            df_stream = pd.DataFrame({
-                                'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
-                                'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [open_acc], 'total_acc': [total_acc]
-                            })
+                            df_stream = pd.DataFrame({'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst], 'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [open_acc], 'total_acc': [total_acc]})
                             pred = pipeline.predict(df_stream)
                             prob = pipeline.predict_proba(df_stream)[0][1]
                             decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
                             
-                            new_record = pd.DataFrame({
-                                "Timestamp": [time.strftime("%H:%M:%S")], "App_ID": [app_id],
-                                "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"],
-                                "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]
-                            })
+                            new_record = pd.DataFrame({"Timestamp": [time.strftime("%H:%M:%S")], "App_ID": [app_id], "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"], "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]})
                             st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
                             table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
                             time.sleep(1.2) 
@@ -216,24 +230,14 @@ def main():
                     app_id = f"APP-{random.randint(10000, 99999)}"
                     l_amnt = random.uniform(2000, 40000); a_inc = random.uniform(30000, 150000)
                     term = 36; i_rate = 10.5; inst = 300.0; dti = 15.0
-                    
-                    df_stream = pd.DataFrame({
-                        'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
-                        'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [10.0], 'total_acc': [20.0]
-                    })
+                    df_stream = pd.DataFrame({'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst], 'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [10.0], 'total_acc': [20.0]})
                     pred = pipeline.predict(df_stream)
                     prob = pipeline.predict_proba(df_stream)[0][1]
                     decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
-                    
-                    new_record = pd.DataFrame({
-                        "Timestamp": [time.strftime("%H:%M:%S")], "App_ID": [app_id],
-                        "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"],
-                        "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]
-                    })
+                    new_record = pd.DataFrame({"Timestamp": [time.strftime("%H:%M:%S")], "App_ID": [app_id], "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"], "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]})
                     st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
                     table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
                     time.sleep(1.2)
-
             st.session_state.stream_active = False
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -270,17 +274,12 @@ def main():
             
         if st.button("🔍 EXPLAIN PREDICTION") and pipeline is not None:
             x_inst = (x_amnt * (x_int / 1200)) / (1 - (1 + x_int / 1200)**(-x_term))
-            df_xai = pd.DataFrame([[x_amnt, x_term, x_int, x_inst, x_inc, x_dti, x_acc, x_acc*2]],
-                                  columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+            df_xai = pd.DataFrame([[x_amnt, x_term, x_int, x_inst, x_inc, x_dti, x_acc, x_acc*2]], columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
             prediction = pipeline.predict(df_xai)
             status = "APPROVED" if prediction[0] == 1 else "REJECTED"
             color = "#2ecc71" if prediction[0] == 1 else "#e74c3c"
             st.markdown(f"<h3 style='color:{color}; text-align:center;'>AI DECISION: {status}</h3>", unsafe_allow_html=True)
-            
-            impact_data = {
-                'Feature': ['Annual Income', 'Debt-to-Income (DTI)', 'Interest Rate', 'Loan Amount', 'Total Accounts'],
-                'Impact': [(x_inc - 60000)/10000, (20 - x_dti)/5, (12 - x_int)/2, (15000 - x_amnt)/5000, (x_acc - 5)/2]
-            }
+            impact_data = {'Feature': ['Annual Income', 'Debt-to-Income (DTI)', 'Interest Rate', 'Loan Amount', 'Total Accounts'], 'Impact': [(x_inc - 60000)/10000, (20 - x_dti)/5, (12 - x_int)/2, (15000 - x_amnt)/5000, (x_acc - 5)/2]}
             df_impact = pd.DataFrame(impact_data)
             df_impact['Color'] = df_impact['Impact'].apply(lambda x: '#2ecc71' if x > 0 else '#e74c3c')
             fig = px.bar(df_impact, x='Impact', y='Feature', orientation='h', color='Color', color_discrete_map="identity")
@@ -305,9 +304,9 @@ def main():
             with st.spinner("Scanning for anomalies..."):
                 time.sleep(1)
                 anomalies = []
-                if f_amnt > (f_inc * 4): anomalies.append("Loan amount is excessively high compared to reported income (Risk of Income Fraud).")
+                if f_amnt > (f_inc * 4): anomalies.append("Loan amount is excessively high compared to reported income.")
                 if f_dti > 50.0: anomalies.append("Debt-to-Income ratio exceeds critical threshold of 50%.")
-                if f_acc > 15: anomalies.append("Suspiciously high number of recent account openings (Possible Identity Theft).")
+                if f_acc > 15: anomalies.append("Suspiciously high number of recent account openings.")
                     
                 if len(anomalies) > 0:
                     st.markdown("<h3 style='color:#e74c3c;'>⚠️ ANOMALIES DETECTED</h3>", unsafe_allow_html=True)
@@ -326,10 +325,9 @@ def main():
         with col1: st.metric("Baseline Mean Income", "$71,500")
         with col2: st.metric("Current Stream Mean", "$95,200", "+33.1%", delta_color="inverse")
         with col3: st.metric("PSI Score (Drift)", "0.24", "High Drift", delta_color="inverse")
-        
         st.markdown("---")
         if st.button("🔄 RUN DRIFT ANALYSIS"):
-            with st.spinner("Calculating Population Stability Index (PSI)..."):
+            with st.spinner("Calculating Population Stability Index..."):
                 time.sleep(1.5)
                 baseline_data = np.random.normal(70000, 15000, 1000)
                 current_data = np.random.normal(95000, 20000, 1000)
@@ -341,36 +339,19 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 7. GEOSPATIAL RISK MAP (NEW FEATURE)
+    # 7. GEOSPATIAL RISK MAP
     # ==========================================
     elif app_mode == "📍 GEOSPATIAL RISK MAP":
         st.markdown('<div class="content-container"><div class="content-container-header">📍 REGIONAL RISK CONCENTRATION</div>', unsafe_allow_html=True)
-        st.write("Analyze geographic distribution of loan approvals and high-risk defaults across the country.")
-        
         if st.button("🗺️ GENERATE HEATMAP"):
             with st.spinner("Plotting geographical intelligence..."):
                 time.sleep(1.5)
-                # Synthesizing dummy map data covering Indian coordinates (approx bounds: Lat 8-28, Lon 70-90)
-                lats = np.random.uniform(10.0, 28.0, 300)
-                lons = np.random.uniform(72.0, 88.0, 300)
-                scores = np.random.randint(300, 850, 300)
-                
-                # Assign status based on random score logic
+                lats = np.random.uniform(10.0, 28.0, 300); lons = np.random.uniform(72.0, 88.0, 300); scores = np.random.randint(300, 850, 300)
                 statuses = ["APPROVED" if s > 600 else "HIGH-RISK (DEFAULT)" for s in scores]
-                
                 df_geo = pd.DataFrame({'Latitude': lats, 'Longitude': lons, 'Credit Score': scores, 'Status': statuses})
-                
-                # Plotly Mapbox using Dark theme mapping
-                fig_map = px.scatter_mapbox(df_geo, lat="Latitude", lon="Longitude", color="Status",
-                                            color_discrete_map={"APPROVED": "#2ecc71", "HIGH-RISK (DEFAULT)": "#e74c3c"},
-                                            zoom=3.5, center={"lat": 20.0, "lon": 78.0},
-                                            hover_name="Status", hover_data=["Credit Score"],
-                                            mapbox_style="carto-darkmatter", height=500)
-                
+                fig_map = px.scatter_mapbox(df_geo, lat="Latitude", lon="Longitude", color="Status", color_discrete_map={"APPROVED": "#2ecc71", "HIGH-RISK (DEFAULT)": "#e74c3c"}, zoom=3.5, center={"lat": 20.0, "lon": 78.0}, hover_name="Status", hover_data=["Credit Score"], mapbox_style="carto-darkmatter", height=500)
                 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_map, use_container_width=True)
-                
-                st.info("💡 Insight: Notice the concentration of 'Red' nodes. Areas with dense high-risk clusters may require tighter local credit policies.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
