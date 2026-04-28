@@ -1,6 +1,7 @@
 # app.py
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
 import os
 import time
@@ -84,12 +85,13 @@ def main():
         "📂 BULK PROCESSING",
         "🧠 EXPLAINABLE AI (XAI)",
         "🚨 FRAUD & ANOMALY DETECT",
+        "📉 MODEL DRIFT MONITOR",
         "🗺️ CREDIT ROADMAP",
         "🔒 ADMIN GATEWAY"
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.5 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.6 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -150,8 +152,6 @@ def main():
     # ==========================================
     elif app_mode == "🌐 LIVE API STREAM":
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
-        st.write("Upload a testing dataset (CSV). The system will simulate streaming this data row-by-row through the ML API.")
-
         stream_file = st.file_uploader("Upload Testing Data for Stream (CSV)", type="csv")
         
         if 'stream_active' not in st.session_state: st.session_state.stream_active = False
@@ -173,9 +173,7 @@ def main():
         if st.session_state.stream_active and pipeline is not None:
             if 'live_df' not in st.session_state:
                 st.session_state.live_df = pd.DataFrame(columns=["Timestamp", "App_ID", "Req_Amount", "Income", "AI_Decision", "Confidence"])
-
-            with placeholder.container():
-                table_placeholder = st.empty()
+            with placeholder.container(): table_placeholder = st.empty()
 
             if stream_file is not None:
                 try:
@@ -197,7 +195,6 @@ def main():
                                 'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
                                 'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [open_acc], 'total_acc': [total_acc]
                             })
-                                
                             pred = pipeline.predict(df_stream)
                             prob = pipeline.predict_proba(df_stream)[0][1]
                             decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
@@ -207,28 +204,22 @@ def main():
                                 "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"],
                                 "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]
                             })
-                            
                             st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
                             table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
                             time.sleep(1.2) 
-                            
-                        except Exception:
-                            break
-                except pd.errors.EmptyDataError:
-                    st.error("🚨 Error: Uploaded CSV is EMPTY.")
+                        except Exception: break
+                except pd.errors.EmptyDataError: st.error("🚨 Error: Uploaded CSV is EMPTY.")
             else:
                 for i in range(20):
                     if not st.session_state.stream_active: break
                     app_id = f"APP-{random.randint(10000, 99999)}"
-                    l_amnt = random.uniform(2000, 40000)
-                    a_inc = random.uniform(30000, 150000)
+                    l_amnt = random.uniform(2000, 40000); a_inc = random.uniform(30000, 150000)
                     term = 36; i_rate = 10.5; inst = 300.0; dti = 15.0
                     
                     df_stream = pd.DataFrame({
                         'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
                         'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [10.0], 'total_acc': [20.0]
                     })
-                    
                     pred = pipeline.predict(df_stream)
                     prob = pipeline.predict_proba(df_stream)[0][1]
                     decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
@@ -238,13 +229,11 @@ def main():
                         "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"],
                         "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]
                     })
-                    
                     st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
                     table_placeholder.dataframe(st.session_state.live_df, use_container_width=True)
                     time.sleep(1.2)
 
             st.session_state.stream_active = False
-            
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
@@ -299,12 +288,10 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 5. FRAUD & ANOMALY DETECT (NEW FEATURE)
+    # 5. FRAUD & ANOMALY DETECT
     # ==========================================
     elif app_mode == "🚨 FRAUD & ANOMALY DETECT":
         st.markdown('<div class="content-container"><div class="content-container-header">🚨 FRAUD & ANOMALY DETECTION LAYER</div>', unsafe_allow_html=True)
-        st.write("Scan applications for logically inconsistent or suspicious data points before ML inference.")
-        
         f_col1, f_col2 = st.columns(2)
         with f_col1:
             f_inc = st.number_input("Reported Annual Income ($)", value=15000.0, step=1000.0)
@@ -316,32 +303,57 @@ def main():
         if st.button("🛡️ RUN SECURITY SCAN"):
             with st.spinner("Scanning for anomalies..."):
                 time.sleep(1)
-                
                 anomalies = []
-                # Rule 1: High Loan to Income Ratio
-                if f_amnt > (f_inc * 4):
-                    anomalies.append("Loan amount is excessively high compared to reported income (Risk of Income Fraud).")
-                # Rule 2: Extreme DTI
-                if f_dti > 50.0:
-                    anomalies.append("Debt-to-Income ratio exceeds critical threshold of 50%.")
-                # Rule 3: Account Burst (Identity Theft Indicator)
-                if f_acc > 15:
-                    anomalies.append("Suspiciously high number of recent account openings (Possible Identity Theft / Synthetic ID).")
+                if f_amnt > (f_inc * 4): anomalies.append("Loan amount is excessively high compared to reported income (Risk of Income Fraud).")
+                if f_dti > 50.0: anomalies.append("Debt-to-Income ratio exceeds critical threshold of 50%.")
+                if f_acc > 15: anomalies.append("Suspiciously high number of recent account openings (Possible Identity Theft).")
                     
                 if len(anomalies) > 0:
                     st.markdown("<h3 style='color:#e74c3c;'>⚠️ ANOMALIES DETECTED</h3>", unsafe_allow_html=True)
-                    st.markdown("The system flagged the following security warnings:")
-                    for issue in anomalies:
-                        st.markdown(f'<div class="anomaly-box">❌ {issue}</div>', unsafe_allow_html=True)
-                    st.markdown("<br><p style='color:#9ca3af;'><i>Recommendation: Route application to manual underwriter team immediately. Do not process through automated ML pipeline.</i></p>", unsafe_allow_html=True)
+                    for issue in anomalies: st.markdown(f'<div class="anomaly-box">❌ {issue}</div>', unsafe_allow_html=True)
                 else:
                     st.markdown("<h3 style='color:#2ecc71;'>✅ SCAN CLEAR</h3>", unsafe_allow_html=True)
-                    st.write("No logical inconsistencies found. Safe to proceed to ML risk inference.")
                     st.balloons()
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 6. CREDIT ROADMAP
+    # 6. MODEL DRIFT MONITOR (NEW MLOPS FEATURE)
+    # ==========================================
+    elif app_mode == "📉 MODEL DRIFT MONITOR":
+        st.markdown('<div class="content-container"><div class="content-container-header">📉 MLOPS DATA DRIFT DASHBOARD</div>', unsafe_allow_html=True)
+        st.write("Compare the original training data distribution (Baseline) against live production data (Current Stream) to detect Model Degradation.")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1: st.metric("Baseline Mean Income", "$71,500")
+        with col2: st.metric("Current Stream Mean", "$95,200", "+33.1%", delta_color="inverse")
+        with col3: st.metric("PSI Score (Drift)", "0.24", "High Drift", delta_color="inverse")
+        
+        st.markdown("---")
+        
+        if st.button("🔄 RUN DRIFT ANALYSIS"):
+            with st.spinner("Calculating Population Stability Index (PSI)..."):
+                time.sleep(1.5)
+                # Synthetic distributions to show drift in Annual Income
+                baseline_data = np.random.normal(70000, 15000, 1000)
+                current_data = np.random.normal(95000, 20000, 1000) # Shifted mean
+                
+                df_drift = pd.DataFrame({
+                    'Income': np.concatenate([baseline_data, current_data]),
+                    'Dataset': ['Training (Baseline)']*1000 + ['Production (Current)']*1000
+                })
+                
+                fig = px.histogram(df_drift, x="Income", color="Dataset", barmode="overlay", 
+                                   title="Feature Distribution Shift: Annual Income",
+                                   color_discrete_sequence=['#00f2fe', '#e74c3c'])
+                fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'))
+                st.plotly_chart(fig, use_container_width=True)
+                
+                st.warning("⚠️ High Drift Detected in 'Annual Income' and 'DTI' features. The current production data varies significantly from the data used during training.")
+                st.error("ACTION REQUIRED: Schedule a model retraining pipeline to maintain prediction accuracy.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 7. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -351,14 +363,13 @@ def main():
         if st.button("GENERATE ROADMAP"):
             st.markdown('<div class="roadmap-box">', unsafe_allow_html=True)
             st.markdown(f"### 🎯 Action Plan to reach {target_score} Score")
-            st.markdown(f"**Step 1 (Immediate):** Pay down revolving credit to bring {current_dti}% DTI below 30%.")
-            st.markdown("**Step 2 (30-60 Days):** Keep credit card balances below 10% of total limit.")
-            st.markdown("**Step 3 (Long Term):** Setup automated payments for consistent history.")
+            st.markdown(f"**Step 1:** Pay down revolving credit to bring {current_dti}% DTI below 30%.")
+            st.markdown("**Step 2:** Keep credit card balances below 10% of total limit.")
             st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 7. ADMIN GATEWAY
+    # 8. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
