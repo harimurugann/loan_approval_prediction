@@ -247,4 +247,4 @@ def main():
                     st.write("")
                     st.subheader("Risk Score Distribution (Portfolio Avg.)")
                     fig = px.bar(x=["Applicant Score", "Portfolio Avg"], y=[probability*100, 75]), 
-                                 labels={'x': 'Entity', 'y': 'Score'},
+                    labels={'x': 'Entity', 'y': 'Score'},
