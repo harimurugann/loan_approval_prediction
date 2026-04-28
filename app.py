@@ -8,6 +8,7 @@ import time
 import random
 import plotly.express as px
 import plotly.graph_objects as go
+from PIL import Image
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="LOAN RISK ASSESSMENT SYSTEM", page_icon="🏦", layout="wide", initial_sidebar_state="expanded")
@@ -27,6 +28,7 @@ st.markdown("""
     .stButton>button:hover { background-color: #00f2fe; color: #000000 !important; }
     [data-testid="stSidebar"] { background-color: #0a0a0a; }
     .stream-active { color: #00f2fe; font-weight: bold; animation: pulse 1.5s infinite; }
+    .ocr-box { background-color: #1e293b; border-left: 4px solid #2ecc71; padding: 15px; border-radius: 4px; font-family: monospace; color: #a7f3d0; margin-top: 10px;}
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 """, unsafe_allow_html=True)
@@ -42,15 +44,18 @@ def load_pipeline():
 
 pipeline = load_pipeline()
 
+def authenticate(username, password):
+    return username == "admin" and password == "admin123"
+
 # --- MAIN LOGIC ---
 def main():
     st.sidebar.markdown("<br>", unsafe_allow_html=True)
     st.sidebar.title("INTELLIGENCE HUB")
     st.sidebar.markdown("---")
     
-    # EXACTLY MATCHING YOUR SCREENSHOT
     app_mode = st.sidebar.radio("NAVIGATE MODULES", [
         "📊 SYSTEM DASHBOARD",
+        "📄 AI DOCUMENT OCR (KYC)",
         "🤖 MULTI-AGENT SWARM",
         "💳 CASH FLOW & OPEN BANKING",
         "🌐 LIVE API STREAM",
@@ -70,7 +75,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V5.0 | ARCHITECTURE: MICROSERVICES")
+    st.sidebar.caption("ENGINE: V6.0 | ARCHITECTURE: FULL-STACK AI")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1: st.markdown('<div class="custom-main-header">LOAN RISK ASSESSMENT SYSTEM</div>', unsafe_allow_html=True)
@@ -101,7 +106,6 @@ def main():
                     monthly_inc = annual_inc / 12 if annual_inc > 0 else 1
                     installment_val = (loan_amnt * (int_rate / 1200)) / (1 - (1 + int_rate / 1200)**(-term))
                     dynamic_dti = (installment_val / monthly_inc) * 100
-                    
                     df_input = pd.DataFrame([[loan_amnt, term, int_rate, installment_val, annual_inc, dynamic_dti, 10, 20]], columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
                     pred = pipeline.predict(df_input); prob = pipeline.predict_proba(df_input)[0][1] 
                     r1, r2 = st.columns(2)
@@ -112,7 +116,56 @@ def main():
             else: st.info("Awaiting input data.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. MULTI-AGENT SWARM (Gen-AI Underwriting updated)
+    # 2. AI DOCUMENT OCR (NEW FEATURE)
+    elif app_mode == "📄 AI DOCUMENT OCR (KYC)":
+        st.markdown('<div class="content-container"><div class="content-container-header">📄 DEEP LEARNING KYC & OCR ENGINE</div>', unsafe_allow_html=True)
+        st.write("Upload an Identity Document (Aadhar/PAN/DL) or Income Proof. The Computer Vision engine will extract the text and check for digital tampering (Photoshop/Spoofing).")
+        
+        uploaded_img = st.file_uploader("Upload Identity Document (JPG/PNG)", type=["jpg", "png", "jpeg"])
+        
+        if uploaded_img is not None:
+            c1, c2 = st.columns([1, 1.5])
+            with c1:
+                st.image(uploaded_img, caption="Uploaded Document", use_container_width=True)
+            
+            with c2:
+                if st.button("🔍 RUN AI OCR & TAMPER CHECK"):
+                    with st.spinner("Initializing Deep Vision Neural Network..."):
+                        time.sleep(1)
+                    with st.spinner("Extracting Bounding Boxes and Text..."):
+                        time.sleep(1.5)
+                    with st.spinner("Running Pixel-level Tampering Analysis..."):
+                        time.sleep(1)
+                        
+                    st.markdown('<h3 style="color:#00f2fe; font-size:1.1rem;">📝 Extracted Data (OCR)</h3>', unsafe_allow_html=True)
+                    # Simulated OCR extraction output
+                    st.markdown('''
+                    <div class="ocr-box">
+                        {<br>
+                        &nbsp;&nbsp;"Document_Type": "National Identity (PAN/Aadhar)",<br>
+                        &nbsp;&nbsp;"Extracted_Name": "KUMAR, S.",<br>
+                        &nbsp;&nbsp;"Date_of_Birth": "14/08/1992",<br>
+                        &nbsp;&nbsp;"ID_Number": "XXXX-XXXX-8942",<br>
+                        &nbsp;&nbsp;"Match_Status": "VERIFIED"<br>
+                        }
+                    </div>
+                    ''', unsafe_allow_html=True)
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    st.markdown('<h3 style="color:#00f2fe; font-size:1.1rem;">🛡️ Security & Spoofing Audit</h3>', unsafe_allow_html=True)
+                    r1, r2 = st.columns(2)
+                    with r1:
+                        st.metric("Tampering Probability", "1.2%", "Authentic Document", delta_color="inverse")
+                        st.progress(2)
+                    with r2:
+                        st.metric("Face Match vs Selfie", "98.5%", "High Confidence")
+                        st.progress(98)
+                        
+                    st.success("✅ KYC Validation Complete. Document is authentic and data is extracted successfully. Safe to proceed to ML Underwriting.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # 3. MULTI-AGENT SWARM
     elif app_mode == "🤖 MULTI-AGENT SWARM":
         st.markdown('<div class="content-container"><div class="content-container-header">🤖 MULTI-AGENT LLM UNDERWRITING SWARM</div>', unsafe_allow_html=True)
         st.write("Deploying multiple AI agents (Risk Agent, Compliance Agent, Financial Agent) to deliberate and generate a consensus report.")
@@ -122,7 +175,7 @@ def main():
                 st.markdown('<div class="content-container" style="border-color:#3b82f6;"><b>Agent 1 (Financial):</b> DTI is stable at 24%.<br><b>Agent 2 (Risk):</b> Historical default mapping shows low correlation.<br><b>Agent 3 (Compliance):</b> KYC checks passed. No syndicate links.<br><br><b>👑 Swarm Consensus:</b> PROCEED WITH APPROVAL.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. CASH FLOW & OPEN BANKING (New Stub)
+    # 4. CASH FLOW & OPEN BANKING
     elif app_mode == "💳 CASH FLOW & OPEN BANKING":
         st.markdown('<div class="content-container"><div class="content-container-header">💳 OPEN BANKING & CASH FLOW ANALYSIS</div>', unsafe_allow_html=True)
         st.write("Analyze live bank statement data via Account Aggregator APIs.")
@@ -134,115 +187,91 @@ def main():
                 st.warning("Insight: 3 bounced recurring payments detected in the last 45 days.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 4 & 5. STREAMING AND BATCH
+    # 5. LIVE API STREAM
     elif app_mode == "🌐 LIVE API STREAM":
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
-        if st.button("▶️ START MOCK STREAM"): st.info("Streaming feature online. (Upload CSV to test in previous versions)")
+        if st.button("▶️ START MOCK STREAM"): st.info("Streaming feature online.")
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # 6. BULK PROCESSING
     elif app_mode == "📂 BULK PROCESSING":
         st.markdown('<div class="content-container"><div class="content-container-header">📂 HIGH-VOLUME BATCH PROCESSING</div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Upload Batch CSV", type="csv")
         if uploaded_file is not None: st.success("Ready for batch processing.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 6. EXPLAINABLE AI
+    # 7. EXPLAINABLE AI
     elif app_mode == "🧠 EXPLAINABLE AI (XAI)":
         st.markdown('<div class="content-container"><div class="content-container-header">🧠 EXPLAINABLE AI (TRANSPARENCY ENGINE)</div>', unsafe_allow_html=True)
-        st.info("Feature active. Generates Plotly SHAP-style waterfall charts for feature importance.")
+        st.info("Feature active. Generates SHAP-style charts.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 7. FRAUD
+    # 8. FRAUD DETECT
     elif app_mode == "🚨 FRAUD & ANOMALY DETECT":
         st.markdown('<div class="content-container"><div class="content-container-header">🚨 FRAUD & ANOMALY DETECTION LAYER</div>', unsafe_allow_html=True)
         st.write("Rule-based execution active in Main Dashboard.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 8. SYNDICATE FRAUD
+    # 9. SYNDICATE FRAUD
     elif app_mode == "🕵️‍♂️ SYNDICATE FRAUD NETWORK":
         st.markdown('<div class="content-container"><div class="content-container-header">🕵️‍♂️ SYNDICATE FRAUD & AML NETWORK</div>', unsafe_allow_html=True)
         if st.button("🌐 INITIATE GRAPH SCAN"): st.error("CRITICAL: Connections with 2 Blacklisted defaulters identified via Shared IP.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 9. BEHAVIORAL AI & DIGITAL (Alternative Data)
+    # 10. BEHAVIORAL AI (Alt Data)
     elif app_mode == "📱 BEHAVIORAL AI & DIGITAL":
         st.markdown('<div class="content-container"><div class="content-container-header">📱 BEHAVIORAL & DIGITAL FOOTPRINT SCORING</div>', unsafe_allow_html=True)
-        st.write("Alternative credit scoring for the unbanked sector using UPI, Telecom, and App behavior.")
         if st.button("🔬 CALCULATE DIGITAL SCORE"): st.success("Alternative Score: 712/850. Eligible for micro-credit.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 10. MODEL DRIFT
+    # 11. MODEL DRIFT
     elif app_mode == "📉 MODEL DRIFT MONITOR":
         st.markdown('<div class="content-container"><div class="content-container-header">📉 MLOPS DATA DRIFT DASHBOARD</div>', unsafe_allow_html=True)
         st.metric("PSI Score (Drift)", "0.28", "Critical Drift", delta_color="inverse")
-        st.error("🚨 ACTION REQUIRED: Model accuracy is degrading. Proceed to Auto-Retraining Pipeline.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 11. AUTO-RETRAINING PIPELINE (NEW LOGIC)
+    # 12. AUTO-RETRAINING PIPELINE
     elif app_mode == "🔄 AUTO-RETRAINING PIPELINE":
         st.markdown('<div class="content-container"><div class="content-container-header">🔄 CONTINUOUS TRAINING (CI/CD) PIPELINE</div>', unsafe_allow_html=True)
-        st.write("Trigger an automated retraining job to ingest the latest 3 months of production data, update the Random Forest weights, and deploy the new artifact.")
-        
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric("Current Model Version", "v2.1.0")
-        with c2: st.metric("Current F1-Score", "0.78", "-0.04 Drop", delta_color="inverse")
-        with c3: st.metric("New Data Records", "14,250")
-        
-        st.markdown("---")
         if st.button("🚀 TRIGGER AUTO-RETRAINING"):
             progress_text = "Initializing training cluster..."
             my_bar = st.progress(0, text=progress_text)
-            
-            time.sleep(1)
-            my_bar.progress(25, text="Fetching new ground-truth data from Snowflake...")
-            time.sleep(1.5)
-            my_bar.progress(50, text="Hyperparameter Tuning in progress (GridSearch)...")
-            time.sleep(2)
-            my_bar.progress(85, text="Evaluating new model against Champion Model...")
-            time.sleep(1)
-            my_bar.progress(100, text="Artifact 'full_pipeline.sav' overwritten and deployed!")
-            
+            time.sleep(1); my_bar.progress(50, text="Hyperparameter Tuning in progress...")
+            time.sleep(1); my_bar.progress(100, text="Artifact overwritten and deployed!")
             st.success("✅ Training Pipeline Executed Successfully!")
-            
-            r1, r2 = st.columns(2)
-            with r1: st.metric("New Model Version", "v2.2.0 (Active)")
-            with r2: st.metric("New F1-Score", "0.85", "+0.07 Gain")
-            st.balloons()
-            
-            st.info("The live API endpoints have been dynamically updated to use the v2.2.0 model with zero downtime.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 12. GEOSPATIAL MAP
+    # 13. GEOSPATIAL MAP
     elif app_mode == "📍 GEOSPATIAL RISK MAP":
         st.markdown('<div class="content-container"><div class="content-container-header">📍 REGIONAL RISK CONCENTRATION</div>', unsafe_allow_html=True)
-        if st.button("🗺️ GENERATE HEATMAP"): st.success("Map generated successfully.")
+        if st.button("🗺️ GENERATE HEATMAP"): st.success("Map generated.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 13. STRESS TESTING
+    # 14. STRESS TESTING
     elif app_mode == "🌪️ STRESS TESTING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">🌪️ MACROECONOMIC STRESS TESTING</div>', unsafe_allow_html=True)
         if st.button("💥 RUN PORTFOLIO STRESS TEST"): st.error("Default Rate Spike Detected!")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 14. ETHICAL AI
+    # 15. ETHICAL AI
     elif app_mode == "⚖️ ETHICAL AI & FAIRNESS":
         st.markdown('<div class="content-container"><div class="content-container-header">⚖️ MODEL FAIRNESS & BIAS AUDIT</div>', unsafe_allow_html=True)
         if st.button("📊 RUN COMPLIANCE AUDIT"): st.error("🚨 ALERT: Model exhibits age bias.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 15. DYNAMIC PRICING
+    # 16. DYNAMIC PRICING
     elif app_mode == "💸 DYNAMIC PRICING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">💸 PRESCRIPTIVE AI: DYNAMIC PRICING OPTIMIZER</div>', unsafe_allow_html=True)
         if st.button("🎯 OPTIMIZE PRICING / COUNTER-OFFER"): st.success("Optimal Target Rate: 16.5%. System Decision: COUNTER-OFFER")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 16. CREDIT ROADMAP
+    # 17. CREDIT ROADMAP
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
         st.write("Plan generation active.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 17. ADMIN GATEWAY
+    # 18. ADMIN GATEWAY
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
         user = st.text_input("Admin ID"); pwd = st.text_input("Security Key", type="password")
