@@ -22,7 +22,7 @@ st.markdown("""
     /* Overall text color adjustment */
     .stMarkdown, p, label { color: #e5e7eb !important; }
 
-    /* Custom Headers - Reduced font size */
+    /* Custom Headers */
     .custom-main-header {
         color: #ffffff;
         font-weight: 800;
@@ -91,7 +91,7 @@ st.markdown("""
     }
 
     /* Primary Buttons */
-    .stButton>button {
+    .stButton>button, .stDownloadButton>button {
         background-color: transparent;
         color: #00f2fe !important;
         border-radius: 4px;
@@ -103,7 +103,7 @@ st.markdown("""
         transition: 0.3s;
         width: 100%;
     }
-    .stButton>button:hover {
+    .stButton>button:hover, .stDownloadButton>button:hover {
         background-color: #00f2fe;
         color: #000000 !important;
     }
@@ -162,7 +162,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V2.7 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V2.8 | STATUS: SECURE")
 
     # HEADER AREA
     h_col1, h_col2 = st.columns([4, 1])
@@ -233,7 +233,6 @@ def main():
                     
                     res_col1, res_col2 = st.columns(2)
                     with res_col1:
-                        # Replaced Streamlit alert boxes with clean markdown
                         if prediction[0] == 1:
                             st.markdown("<h3 style='color:#2ecc71; margin-bottom: 0px;'>✅ APPROVED</h3>", unsafe_allow_html=True)
                             st.markdown("<p style='color:#9ca3af; font-size: 0.85rem;'>Risk Profile: Low to Moderate</p>", unsafe_allow_html=True)
@@ -244,32 +243,65 @@ def main():
                     with res_col2:
                         st.metric("Confidence Score", f"{probability*100:.1f} / 100")
             else:
-                # Replaced the blue st.info box with clean text
                 st.markdown("<p style='color:#9ca3af; font-style:italic;'>Awaiting input data. Click 'Execute' to generate AI insights.</p>", unsafe_allow_html=True)
                 
             st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 2. BULK PROCESSING MODULE
+    # 2. BULK PROCESSING MODULE (UPDATED WITH DOWNLOAD BUTTON)
     # ==========================================
     elif app_mode == "📂 BULK PROCESSING":
         st.markdown('<div class="content-container"><div class="content-container-header">📂 HIGH-VOLUME BATCH PROCESSING</div>', unsafe_allow_html=True)
         st.write("Upload a CSV file containing multiple customer records for batch inference.")
         
-        uploaded_file = st.file_uploader("Upload Batch CSV", type="csv")
-        if uploaded_file is not None and pipeline is not None:
-            df_bulk = pd.read_csv(uploaded_file)
-            st.write("Data Preview:")
-            st.dataframe(df_bulk.head(3))
+        # ---- NEW: Generate Sample Data for Download ----
+        sample_df = pd.DataFrame({
+            'loan_amnt': [10000.0, 35000.0, 5000.0],
+            'term': [36, 60, 36],
+            'int_rate': [8.5, 18.2, 11.0],
+            'installment': [315.0, 890.0, 160.0],
+            'annual_inc': [65000.0, 45000.0, 80000.0],
+            'dti': [12.5, 35.0, 15.0],
+            'open_acc': [8, 15, 6],
+            'total_acc': [16, 25, 12]
+        })
+        sample_csv = sample_df.to_csv(index=False).encode('utf-8')
+        
+        col_up1, col_up2 = st.columns([2, 1])
+        with col_up2:
+            st.write("") # Padding
+            st.download_button(
+                label="📥 DOWNLOAD SAMPLE TEMPLATE",
+                data=sample_csv,
+                file_name='sample_batch_template.csv',
+                mime='text/csv'
+            )
+        # -------------------------------------------------
+
+        with col_up1:
+            uploaded_file = st.file_uploader("Upload Batch CSV", type="csv")
             
-            if st.button("PROCESS BATCH DATA"):
-                with st.spinner("Processing records..."):
-                    time.sleep(1)
-                    X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
-                    predictions = pipeline.predict(X_bulk)
-                    df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
-                    st.markdown("<h4 style='color:#2ecc71;'>✅ Batch processing complete!</h4>", unsafe_allow_html=True)
-                    st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(5))
+        if uploaded_file is not None and pipeline is not None:
+            try:
+                df_bulk = pd.read_csv(uploaded_file)
+                
+                if df_bulk.empty:
+                    st.error("🚨 Error: The uploaded file is completely empty. Please download the sample template and try again.")
+                else:
+                    st.write("Data Preview:")
+                    st.dataframe(df_bulk.head(3))
+                    
+                    if st.button("PROCESS BATCH DATA"):
+                        with st.spinner("Processing records..."):
+                            time.sleep(1)
+                            X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
+                            predictions = pipeline.predict(X_bulk)
+                            df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
+                            st.markdown("<h4 style='color:#2ecc71;'>✅ Batch processing complete!</h4>", unsafe_allow_html=True)
+                            st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(5))
+            except Exception as e:
+                st.error("🚨 Data format error! Make sure the columns match the required input. Use the Sample Template.")
+                
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
