@@ -84,7 +84,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V3.2 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V3.3 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
@@ -141,7 +141,7 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 2. LIVE API STREAM SIMULATION (2D ARRAY FIX)
+    # 2. LIVE API STREAM SIMULATION
     # ==========================================
     elif app_mode == "🌐 LIVE API STREAM":
         st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
@@ -188,7 +188,6 @@ def main():
                         try:
                             app_id = f"APP-{random.randint(10000, 99999)}"
                             
-                            # Safely extract values with fallback defaults if CSV is corrupted/empty
                             l_amnt = float(row.get('loan_amnt', random.uniform(2000, 40000)) or random.uniform(2000, 40000))
                             term = float(row.get('term', 36) or 36)
                             i_rate = float(row.get('int_rate', 10.5) or 10.5)
@@ -198,16 +197,9 @@ def main():
                             open_acc = float(row.get('open_acc', 10) or 10)
                             total_acc = float(row.get('total_acc', 20) or 20)
                             
-                            # CRITICAL FIX: Creating a strict 2D DataFrame explicitly to prevent 1D Array errors
                             df_stream = pd.DataFrame({
-                                'loan_amnt': [l_amnt],
-                                'term': [term],
-                                'int_rate': [i_rate],
-                                'installment': [inst],
-                                'annual_inc': [a_inc],
-                                'dti': [dti],
-                                'open_acc': [open_acc],
-                                'total_acc': [total_acc]
+                                'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
+                                'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [open_acc], 'total_acc': [total_acc]
                             })
                                 
                             pred = pipeline.predict(df_stream)
@@ -215,12 +207,9 @@ def main():
                             decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
                             
                             new_record = pd.DataFrame({
-                                "Timestamp": [time.strftime("%H:%M:%S")],
-                                "App_ID": [app_id],
-                                "Req_Amount": [f"${l_amnt:,.0f}"],
-                                "Income": [f"${a_inc:,.0f}"],
-                                "AI_Decision": [decision],
-                                "Confidence": [f"{prob*100:.1f}%"]
+                                "Timestamp": [time.strftime("%H:%M:%S")], "App_ID": [app_id],
+                                "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"],
+                                "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]
                             })
                             
                             st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
@@ -245,16 +234,9 @@ def main():
                     dti = random.uniform(5.0, 35.0)
                     inst = (l_amnt * (i_rate / 1200)) / (1 - (1 + i_rate / 1200)**(-term))
                     
-                    # Ensure 2D DataFrame is constructed
                     df_stream = pd.DataFrame({
-                        'loan_amnt': [l_amnt],
-                        'term': [term],
-                        'int_rate': [i_rate],
-                        'installment': [inst],
-                        'annual_inc': [a_inc],
-                        'dti': [dti],
-                        'open_acc': [10.0],
-                        'total_acc': [20.0]
+                        'loan_amnt': [l_amnt], 'term': [term], 'int_rate': [i_rate], 'installment': [inst],
+                        'annual_inc': [a_inc], 'dti': [dti], 'open_acc': [10.0], 'total_acc': [20.0]
                     })
                     
                     pred = pipeline.predict(df_stream)
@@ -262,12 +244,9 @@ def main():
                     decision = "✅ APPROVED" if pred[0] == 1 else "🚫 REJECTED"
                     
                     new_record = pd.DataFrame({
-                        "Timestamp": [time.strftime("%H:%M:%S")],
-                        "App_ID": [app_id],
-                        "Req_Amount": [f"${l_amnt:,.0f}"],
-                        "Income": [f"${a_inc:,.0f}"],
-                        "AI_Decision": [decision],
-                        "Confidence": [f"{prob*100:.1f}%"]
+                        "Timestamp": [time.strftime("%H:%M:%S")], "App_ID": [app_id],
+                        "Req_Amount": [f"${l_amnt:,.0f}"], "Income": [f"${a_inc:,.0f}"],
+                        "AI_Decision": [decision], "Confidence": [f"{prob*100:.1f}%"]
                     })
                     
                     st.session_state.live_df = pd.concat([new_record, st.session_state.live_df]).head(10)
@@ -280,19 +259,44 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 3. BULK PROCESSING
+    # 3. BULK PROCESSING (UPDATED WITH DOWNLOAD BUTTON)
     # ==========================================
     elif app_mode == "📂 BULK PROCESSING":
         st.markdown('<div class="content-container"><div class="content-container-header">📂 HIGH-VOLUME BATCH PROCESSING</div>', unsafe_allow_html=True)
+        st.write("Upload your 20,000+ rows dataset here for instant batch predictions.")
+        
         uploaded_file = st.file_uploader("Upload Batch CSV", type="csv")
+        
         if uploaded_file is not None and pipeline is not None:
             df_bulk = pd.read_csv(uploaded_file)
+            st.write(f"Loaded **{len(df_bulk)}** records from file.")
+            
             if st.button("PROCESS BATCH DATA"):
-                X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
-                predictions = pipeline.predict(X_bulk)
-                df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
-                st.markdown("<h4 style='color:#2ecc71;'>✅ Batch processing complete!</h4>", unsafe_allow_html=True)
-                st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(5))
+                with st.spinner(f"AI Engine is processing {len(df_bulk)} records..."):
+                    time.sleep(1.5) # Small simulated delay for processing feel
+                    
+                    X_bulk = df_bulk.drop('loan_paid_back', axis=1) if 'loan_paid_back' in df_bulk.columns else df_bulk
+                    predictions = pipeline.predict(X_bulk)
+                    
+                    # Store result back into the dataframe
+                    df_bulk['AI_Status'] = ["Approved" if p == 1 else "Denied" for p in predictions]
+                    
+                    st.markdown(f"<h4 style='color:#2ecc71;'>✅ Successfully Processed All {len(df_bulk)} Records!</h4>", unsafe_allow_html=True)
+                    
+                    # Showing only a PREVIEW to avoid crashing the browser
+                    st.write(f"Preview (First 10 of {len(df_bulk)} results):")
+                    st.dataframe(df_bulk[['loan_amnt', 'annual_inc', 'AI_Status']].head(10))
+                    
+                    # DOWNLOAD BUTTON FOR THE FULL RESULTS
+                    st.markdown("---")
+                    st.write("📥 Click below to download the complete file with all AI predictions:")
+                    csv_export = df_bulk.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="DOWNLOAD FULL REPORT (CSV)",
+                        data=csv_export,
+                        file_name='20k_Predictions_Result.csv',
+                        mime='text/csv',
+                    )
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
