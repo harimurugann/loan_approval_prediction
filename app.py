@@ -246,5 +246,5 @@ def main():
                     # Placeholder interactive chart to make it look full
                     st.write("")
                     st.subheader("Risk Score Distribution (Portfolio Avg.)")
-                    fig = px.bar(x=["Applicant Score", "Portfolio Avg"], y=[probability*100, 75], 
+                    fig = px.bar(x=["Applicant Score", "Portfolio Avg"], y=[probability*100, 75]), 
                                  labels={'x': 'Entity', 'y': 'Score'},
