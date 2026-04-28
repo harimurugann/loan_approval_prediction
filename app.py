@@ -8,6 +8,8 @@ import time
 import random
 import plotly.express as px
 import plotly.graph_objects as go
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 
 # --- PAGE CONFIGURATION & METADATA ---
 st.set_page_config(
@@ -88,6 +90,7 @@ def main():
         "🚨 FRAUD & ANOMALY DETECT",
         "🕵️‍♂️ SYNDICATE FRAUD NETWORK",
         "📉 MODEL DRIFT MONITOR",
+        "🔄 AUTO-RETRAINING PIPELINE",
         "📍 GEOSPATIAL RISK MAP",
         "🌪️ STRESS TESTING ENGINE",
         "⚖️ ETHICAL AI & FAIRNESS",
@@ -264,50 +267,20 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 7. SYNDICATE FRAUD NETWORK (BUG FIXED!)
+    # 7. SYNDICATE FRAUD NETWORK
     # ==========================================
     elif app_mode == "🕵️‍♂️ SYNDICATE FRAUD NETWORK":
         st.markdown('<div class="content-container"><div class="content-container-header">🕵️‍♂️ SYNDICATE FRAUD & AML NETWORK</div>', unsafe_allow_html=True)
-        st.write("Scan the applicant's network graph to detect connections with known defaulters (Fraud Rings).")
-        
         applicant_id = st.text_input("Enter Applicant ID to Scan", value="APP-89421")
-        
         if st.button("🌐 INITIATE GRAPH SCAN"):
-            with st.spinner("Mapping deep connections..."):
-                time.sleep(2)
-                
-                # Defining Node Positions
-                node_x = [0, 1, 2, -1, -2, 0, 0]
-                node_y = [0, 1, 1.5, 1, 1.5, -1, -2]
-                node_text = [
-                    f"Applicant<br>{applicant_id}", "Shared IP:<br>192.168.1.45", "Blacklisted Defaulter<br>#D-102", 
-                    "Shared Phone:<br>+1-555-0198", "Blacklisted Defaulter<br>#D-998", "Shared Employer:<br>Acme Corp", "Good Customer<br>#C-772"
-                ]
-                node_color = ['#f1c40f', '#95a5a6', '#e74c3c', '#95a5a6', '#e74c3c', '#95a5a6', '#2ecc71']
-                
-                edge_x = [0, 1, None, 1, 2, None, 0, -1, None, -1, -2, None, 0, 0, None, 0, 0, None]
-                edge_y = [0, 1, None, 1, 1.5, None, 0, 1, None, 1, 1.5, None, 0, -1, None, -1, -2, None]
-
-                edge_trace = go.Scatter(x=edge_x, y=edge_y, line=dict(width=2, color='#888'), hoverinfo='none', mode='lines')
-                node_trace = go.Scatter(x=node_x, y=node_y, mode='markers+text', text=[t.split('<br>')[0] for t in node_text], textposition="bottom center", hovertext=node_text, hoverinfo='text', marker=dict(color=node_color, size=30, line_width=2))
-
-                # BUG FIX: Safely formatting Layout parameters
-                fig = go.Figure(data=[edge_trace, node_trace], layout=go.Layout(
-                    title=dict(text='Entity Link Analysis (1st & 2nd Degree Connections)', font=dict(size=16, color='#ffffff')),
-                    font=dict(color='#e5e7eb'),
-                    showlegend=False,
-                    hovermode='closest',
-                    margin=dict(b=20,l=5,r=5,t=40),
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
-                ))
-                
-                st.error("🚨 CRITICAL AML ALERT: Syndicate Fraud Detected!")
-                st.write(f"Applicant **{applicant_id}** is deeply connected to 2 Known Defaulters via a shared IP Address and Phone Number. This indicates a high probability of a coordinated Fraud Ring.")
-                st.plotly_chart(fig, use_container_width=True)
-                
+            node_x = [0, 1, 2, -1, -2, 0, 0]; node_y = [0, 1, 1.5, 1, 1.5, -1, -2]
+            node_text = [f"Applicant<br>{applicant_id}", "Shared IP", "Defaulter", "Shared Phone", "Defaulter", "Shared Employer", "Good Customer"]
+            edge_x = [0, 1, None, 1, 2, None, 0, -1, None, -1, -2, None, 0, 0, None, 0, 0, None]
+            edge_y = [0, 1, None, 1, 1.5, None, 0, 1, None, 1, 1.5, None, 0, -1, None, -1, -2, None]
+            fig = go.Figure(data=[go.Scatter(x=edge_x, y=edge_y, line=dict(width=2, color='#888'), mode='lines'), go.Scatter(x=node_x, y=node_y, mode='markers+text', text=node_text, marker=dict(color=['#f1c40f', '#95a5a6', '#e74c3c', '#95a5a6', '#e74c3c', '#95a5a6', '#2ecc71'], size=30))])
+            fig.update_layout(title=dict(text='Entity Link Analysis', font=dict(color='#ffffff')), font=dict(color='#e5e7eb'), showlegend=False, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', xaxis=dict(showgrid=False, showticklabels=False), yaxis=dict(showgrid=False, showticklabels=False))
+            st.error("🚨 CRITICAL AML ALERT: Syndicate Fraud Detected! Connected to 2 Known Defaulters.")
+            st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
@@ -319,7 +292,70 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 9. GEOSPATIAL RISK MAP
+    # 9. AUTO-RETRAINING PIPELINE (NEW MLOPS FEATURE)
+    # ==========================================
+    elif app_mode == "🔄 AUTO-RETRAINING PIPELINE":
+        st.markdown('<div class="content-container"><div class="content-container-header">🔄 MLOPS: CONTINUOUS TRAINING PIPELINE</div>', unsafe_allow_html=True)
+        st.write("Trigger the automated pipeline to retrain the model on fresh production data when drift is detected.")
+        
+        c1, c2, c3 = st.columns(3)
+        with c1: st.metric("Current Model Version", "v1.0 (Stale)")
+        with c2: st.metric("Fresh Data Available", "12,450 Rows")
+        with c3: st.metric("Status", "Awaiting Trigger")
+        
+        st.markdown("---")
+        
+        if st.button("⚙️ INITIATE RETRAINING WORKFLOW"):
+            # Simulated Pipeline Steps
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            status_text.text("Ingesting fresh production data...")
+            time.sleep(1)
+            progress_bar.progress(20)
+            
+            status_text.text("Applying SMOTE for class balancing...")
+            time.sleep(1.5)
+            progress_bar.progress(40)
+            
+            status_text.text("Training Candidate Model (RandomForest)...")
+            time.sleep(2)
+            progress_bar.progress(70)
+            
+            status_text.text("Running A/B Testing (Champion vs. Challenger)...")
+            time.sleep(1.5)
+            progress_bar.progress(90)
+            
+            # Synthetic evaluation metrics
+            baseline_acc = 80.17
+            new_acc = 83.45
+            
+            status_text.text("Pipeline Complete!")
+            progress_bar.progress(100)
+            
+            st.markdown("### 🏆 Model Evaluation Results")
+            r1, r2, r3 = st.columns(3)
+            with r1: st.metric("Old Model (Champion)", f"{baseline_acc}%")
+            with r2: st.metric("New Model (Challenger)", f"{new_acc}%", f"+{(new_acc - baseline_acc):.2f}%", delta_color="normal")
+            with r3: st.metric("Pipeline Action", "PROMOTED TO PROD")
+            
+            st.success(f"✅ Success! The new model (v1.1) outperformed the baseline by {new_acc - baseline_acc:.2f}%. It has been automatically serialized as 'full_pipeline.sav' and deployed to the active environment.")
+            
+            # Visualizing the A/B test results
+            df_ab = pd.DataFrame({
+                "Model Version": ["Champion (v1.0)", "Challenger (v1.1)"],
+                "Accuracy (%)": [baseline_acc, new_acc]
+            })
+            fig = px.bar(df_ab, x="Model Version", y="Accuracy (%)", color="Model Version", 
+                         title="Champion vs. Challenger A/B Test",
+                         color_discrete_sequence=['#95a5a6', '#2ecc71'])
+            fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#e5e7eb'), showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 10. GEOSPATIAL RISK MAP
     # ==========================================
     elif app_mode == "📍 GEOSPATIAL RISK MAP":
         st.markdown('<div class="content-container"><div class="content-container-header">📍 REGIONAL RISK CONCENTRATION</div>', unsafe_allow_html=True)
@@ -327,7 +363,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 10. STRESS TESTING ENGINE
+    # 11. STRESS TESTING ENGINE
     # ==========================================
     elif app_mode == "🌪️ STRESS TESTING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">🌪️ MACROECONOMIC STRESS TESTING</div>', unsafe_allow_html=True)
@@ -336,7 +372,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 11. ETHICAL AI & FAIRNESS
+    # 12. ETHICAL AI & FAIRNESS
     # ==========================================
     elif app_mode == "⚖️ ETHICAL AI & FAIRNESS":
         st.markdown('<div class="content-container"><div class="content-container-header">⚖️ MODEL FAIRNESS & BIAS AUDIT</div>', unsafe_allow_html=True)
@@ -344,7 +380,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 12. DYNAMIC PRICING ENGINE
+    # 13. DYNAMIC PRICING ENGINE
     # ==========================================
     elif app_mode == "💸 DYNAMIC PRICING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">💸 PRESCRIPTIVE AI: DYNAMIC PRICING OPTIMIZER</div>', unsafe_allow_html=True)
@@ -352,7 +388,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 13. CREDIT ROADMAP
+    # 14. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
@@ -360,7 +396,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 14. ADMIN GATEWAY
+    # 15. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
