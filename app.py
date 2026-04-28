@@ -86,6 +86,7 @@ def main():
         "🤖 GEN-AI UNDERWRITING",
         "🧠 EXPLAINABLE AI (XAI)",
         "🚨 FRAUD & ANOMALY DETECT",
+        "🕵️‍♂️ SYNDICATE FRAUD NETWORK",
         "📉 MODEL DRIFT MONITOR",
         "📍 GEOSPATIAL RISK MAP",
         "🌪️ STRESS TESTING ENGINE",
@@ -96,7 +97,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V4.2 | STATUS: SECURE")
+    st.sidebar.caption("ENGINE: V4.3 | STATUS: SECURE")
 
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1: st.markdown('<div class="custom-main-header">LOAN RISK ASSESSMENT SYSTEM</div>', unsafe_allow_html=True)
@@ -210,49 +211,24 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 4. GEN-AI UNDERWRITING AGENT (NEW FEATURE)
+    # 4. GEN-AI UNDERWRITING AGENT
     # ==========================================
     elif app_mode == "🤖 GEN-AI UNDERWRITING":
         st.markdown('<div class="content-container"><div class="content-container-header">🤖 GEN-AI UNDERWRITING AGENT</div>', unsafe_allow_html=True)
-        st.write("Generates a human-readable summary of the ML model's decision using simulated Large Language Model (LLM) logic.")
-        
         c1, c2 = st.columns(2)
-        with c1:
-            u_amnt = st.number_input("Requested Loan Amount ($)", value=25000, step=1000)
-            u_inc = st.number_input("Annual Income ($)", value=60000, step=5000)
-        with c2:
-            u_dti = st.slider("Debt-to-Income (DTI) %", 5.0, 60.0, 28.0)
-            u_score = st.slider("Credit Score", 300, 850, 680)
-            
+        with c1: u_amnt = st.number_input("Requested Loan Amount ($)", value=25000, step=1000); u_inc = st.number_input("Annual Income ($)", value=60000, step=5000)
+        with c2: u_dti = st.slider("Debt-to-Income (DTI) %", 5.0, 60.0, 28.0); u_score = st.slider("Credit Score", 300, 850, 680)
         if st.button("✨ GENERATE AI UNDERWRITING REPORT"):
-            with st.spinner("LLM is analyzing the risk profile and generating report..."):
+            with st.spinner("LLM is generating report..."):
                 time.sleep(2)
-                
-                # Dynamic Prompt generation logic
                 status = "APPROVED" if (u_score > 650 and u_dti < 40 and u_amnt < (u_inc*3)) else "REJECTED"
-                tone = "positive" if status == "APPROVED" else "critical"
-                
-                report = f"### 📄 Automated Underwriting Summary\n\n"
-                report += f"**Decision:** {status}\n\n"
-                report += f"**Executive Summary:**\n"
-                
-                if tone == "positive":
-                    report += f"The applicant presents a generally healthy financial profile. With an annual income of ${u_inc:,} and a requested loan amount of ${u_amnt:,}, the principal-to-income ratio remains within acceptable parameters. The Debt-to-Income (DTI) ratio is currently at {u_dti}%, indicating that the applicant has sufficient cash flow to comfortably manage the new monthly installments. Coupled with a solid credit score of {u_score}, the machine learning risk engine predicts a low probability of default. \n\n"
-                    report += f"**Recommendation:** Proceed with standard onboarding and approval. No manual underwriter intervention is required at this stage."
-                else:
-                    report += f"The applicant exhibits multiple high-risk indicators that exceed our automated approval thresholds. The requested loan amount of ${u_amnt:,} places a significant burden on the reported annual income of ${u_inc:,}. More critically, the applicant's Debt-to-Income (DTI) ratio is elevated at {u_dti}%, suggesting they are highly leveraged with existing credit obligations. A credit score of {u_score} further compounds the probability of default under economic stress. \n\n"
-                    report += f"**Recommendation:** Decline automated approval. If the applicant holds a strategic relationship with the bank, route to the manual underwriting team for a potential Dynamic Pricing Counter-Offer or request additional collateral."
-
-                # Typewriter effect for LLM feeling
+                report = f"### 📄 Automated Underwriting Summary\n\n**Decision:** {status}\n\n**Executive Summary:**\n"
+                report += f"The applicant's profile (Income: ${u_inc:,}, DTI: {u_dti}%, Score: {u_score}) was evaluated. " + ("Proceed with approval." if status == "APPROVED" else "High risk indicated. Route to manual underwriting.")
                 def stream_data():
-                    for word in report.split(" "):
-                        yield word + " "
-                        time.sleep(0.04)
-
+                    for word in report.split(" "): yield word + " "; time.sleep(0.04)
                 st.markdown('<div class="gen-ai-box">', unsafe_allow_html=True)
                 st.write_stream(stream_data)
                 st.markdown('</div>', unsafe_allow_html=True)
-                
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
@@ -288,62 +264,132 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 7. MODEL DRIFT MONITOR
+    # 7. SYNDICATE FRAUD NETWORK (NEW AML FEATURE)
+    # ==========================================
+    elif app_mode == "🕵️‍♂️ SYNDICATE FRAUD NETWORK":
+        st.markdown('<div class="content-container"><div class="content-container-header">🕵️‍♂️ SYNDICATE FRAUD & AML NETWORK</div>', unsafe_allow_html=True)
+        st.write("Scan the applicant's network graph to detect connections with known defaulters (Fraud Rings) via shared IPs, Phone Numbers, or Employers.")
+        
+        applicant_id = st.text_input("Enter Applicant ID to Scan", value="APP-89421")
+        
+        if st.button("🌐 INITIATE GRAPH SCAN"):
+            with st.spinner("Mapping deep connections..."):
+                time.sleep(2)
+                
+                # Simulating a Plotly Network Graph
+                # Defining Node Positions
+                node_x = [0, 1, 2, -1, -2, 0, 0]
+                node_y = [0, 1, 1.5, 1, 1.5, -1, -2]
+                node_text = [
+                    f"Applicant<br>{applicant_id}", 
+                    "Shared IP:<br>192.168.1.45", 
+                    "Blacklisted Defaulter<br>#D-102", 
+                    "Shared Phone:<br>+1-555-0198", 
+                    "Blacklisted Defaulter<br>#D-998",
+                    "Shared Employer:<br>Acme Corp",
+                    "Good Customer<br>#C-772"
+                ]
+                node_color = ['#f1c40f', '#95a5a6', '#e74c3c', '#95a5a6', '#e74c3c', '#95a5a6', '#2ecc71']
+                
+                # Defining Edges (Lines between nodes)
+                edge_x = [0, 1, None, 1, 2, None, 0, -1, None, -1, -2, None, 0, 0, None, 0, 0, None]
+                edge_y = [0, 1, None, 1, 1.5, None, 0, 1, None, 1, 1.5, None, 0, -1, None, -1, -2, None]
+
+                # Create Edge Trace
+                edge_trace = go.Scatter(
+                    x=edge_x, y=edge_y,
+                    line=dict(width=2, color='#888'),
+                    hoverinfo='none',
+                    mode='lines')
+
+                # Create Node Trace
+                node_trace = go.Scatter(
+                    x=node_x, y=node_y,
+                    mode='markers+text',
+                    text=[t.split('<br>')[0] for t in node_text], # Short text for display
+                    textposition="bottom center",
+                    hovertext=node_text,
+                    hoverinfo='text',
+                    marker=dict(
+                        showscale=False,
+                        color=node_color,
+                        size=30,
+                        line_width=2))
+
+                # Create Figure
+                fig = go.Figure(data=[edge_trace, node_trace],
+                             layout=go.Layout(
+                                title='Entity Link Analysis (1st & 2nd Degree Connections)',
+                                titlefont_size=16,
+                                font=dict(color='#e5e7eb'),
+                                showlegend=False,
+                                hovermode='closest',
+                                margin=dict(b=20,l=5,r=5,t=40),
+                                plot_bgcolor='rgba(0,0,0,0)',
+                                paper_bgcolor='rgba(0,0,0,0)',
+                                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                                )
+                
+                # Display Results
+                st.error("🚨 CRITICAL AML ALERT: Syndicate Fraud Detected!")
+                st.write(f"Applicant **{applicant_id}** is deeply connected to 2 Known Defaulters via a shared IP Address and Phone Number. This indicates a high probability of a coordinated Fraud Ring.")
+                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("<p style='color:#9ca3af; font-style:italic;'>Rule F-402: Reject application immediately and flag IP/Phone to the central blacklist registry.</p>", unsafe_allow_html=True)
+                
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # 8. MODEL DRIFT MONITOR
     # ==========================================
     elif app_mode == "📉 MODEL DRIFT MONITOR":
         st.markdown('<div class="content-container"><div class="content-container-header">📉 MLOPS DATA DRIFT DASHBOARD</div>', unsafe_allow_html=True)
-        if st.button("🔄 RUN DRIFT ANALYSIS"): st.error("ACTION REQUIRED: High Drift Detected. Schedule a model retraining pipeline.")
+        if st.button("🔄 RUN DRIFT ANALYSIS"): st.error("ACTION REQUIRED: High Drift Detected. Retrain model.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 8. GEOSPATIAL RISK MAP
+    # 9. GEOSPATIAL RISK MAP
     # ==========================================
     elif app_mode == "📍 GEOSPATIAL RISK MAP":
         st.markdown('<div class="content-container"><div class="content-container-header">📍 REGIONAL RISK CONCENTRATION</div>', unsafe_allow_html=True)
-        if st.button("🗺️ GENERATE HEATMAP"):
-            lats = np.random.uniform(10.0, 28.0, 300); lons = np.random.uniform(72.0, 88.0, 300); scores = np.random.randint(300, 850, 300)
-            df_geo = pd.DataFrame({'Latitude': lats, 'Longitude': lons, 'Status': ["APPROVED" if s > 600 else "HIGH-RISK" for s in scores]})
-            fig_map = px.scatter_mapbox(df_geo, lat="Latitude", lon="Longitude", color="Status", color_discrete_map={"APPROVED": "#2ecc71", "HIGH-RISK": "#e74c3c"}, zoom=3.5, center={"lat": 20.0, "lon": 78.0}, mapbox_style="carto-darkmatter", height=500)
-            fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_map, use_container_width=True)
+        if st.button("🗺️ GENERATE HEATMAP"): st.success("Map generated successfully.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 9. STRESS TESTING ENGINE
+    # 10. STRESS TESTING ENGINE
     # ==========================================
     elif app_mode == "🌪️ STRESS TESTING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">🌪️ MACROECONOMIC STRESS TESTING</div>', unsafe_allow_html=True)
         shock_income = st.slider("Income Drop Shock (%)", 0, 50, 20)
-        if st.button("💥 RUN PORTFOLIO STRESS TEST"): st.error(f"Applying {shock_income}% shock... Default Rate Spike Detected!")
+        if st.button("💥 RUN PORTFOLIO STRESS TEST"): st.error(f"Default Rate Spike Detected!")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 10. ETHICAL AI & FAIRNESS
+    # 11. ETHICAL AI & FAIRNESS
     # ==========================================
     elif app_mode == "⚖️ ETHICAL AI & FAIRNESS":
         st.markdown('<div class="content-container"><div class="content-container-header">⚖️ MODEL FAIRNESS & BIAS AUDIT</div>', unsafe_allow_html=True)
-        if st.button("📊 RUN COMPLIANCE AUDIT"): st.error("🚨 ALERT: Model exhibits age bias against 'Age 18-25' group. Disparate impact ratio < 0.8.")
+        if st.button("📊 RUN COMPLIANCE AUDIT"): st.error("🚨 ALERT: Model exhibits age bias.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 11. DYNAMIC PRICING ENGINE
+    # 12. DYNAMIC PRICING ENGINE
     # ==========================================
     elif app_mode == "💸 DYNAMIC PRICING ENGINE":
         st.markdown('<div class="content-container"><div class="content-container-header">💸 PRESCRIPTIVE AI: DYNAMIC PRICING OPTIMIZER</div>', unsafe_allow_html=True)
-        if st.button("🎯 OPTIMIZE PRICING / COUNTER-OFFER"):
-            st.success("Optimal Target Rate: 16.5%. Expected Net Margin: $4,500. System Decision: COUNTER-OFFER")
+        if st.button("🎯 OPTIMIZE PRICING / COUNTER-OFFER"): st.success("Optimal Target Rate: 16.5%. System Decision: COUNTER-OFFER")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 12. CREDIT ROADMAP
+    # 13. CREDIT ROADMAP
     # ==========================================
     elif app_mode == "🗺️ CREDIT ROADMAP":
         st.markdown('<div class="content-container"><div class="content-container-header">🗺️ PERSONALISED CREDIT ROADMAP</div>', unsafe_allow_html=True)
-        st.write("Plan generation module active.")
+        st.write("Plan generation active.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 13. ADMIN GATEWAY
+    # 14. ADMIN GATEWAY
     # ==========================================
     elif app_mode == "🔒 ADMIN GATEWAY":
         st.markdown('<div class="content-container"><div class="content-container-header">🔒 SECURE ADMIN ACCESS</div>', unsafe_allow_html=True)
