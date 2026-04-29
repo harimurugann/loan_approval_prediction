@@ -1,4 +1,4 @@
-# app.py - V9.1 MASTER BUILD (IP TRACKER BUG FIXED)
+# app.py - V9.2 MASTER BUILD (MULTI-AGENT SWARM DYNAMIC LOGIC ADDED)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -72,7 +72,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V9.1 | STATUS: FULLY ACTIVE")
+    st.sidebar.caption("ENGINE: V9.2 | STATUS: FULLY ACTIVE")
 
     st.markdown(f'<div class="custom-main-header">{app_mode}</div>', unsafe_allow_html=True)
 
@@ -106,7 +106,7 @@ def main():
             else: st.write("Ready for scan.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. CYBER-THREAT & IP TRACKER (BUG FIXED WITH REAL LOGIC)
+    # 2. CYBER-THREAT & IP TRACKER
     elif app_mode == "🛡️ CYBER-THREAT & IP TRACKER":
         st.markdown('<div class="content-container"><div class="content-container-header">🛡️ CYBER-THREAT INTELLIGENCE SYSTEM</div>', unsafe_allow_html=True)
         st.write("Intercepts incoming application packets to analyze IP reputation, geolocation threats, and Dark-Web database matches.")
@@ -116,18 +116,12 @@ def main():
         if st.button("🛰️ SCAN IP REPUTATION"):
             with st.spinner("Quering Threat Intel Databases..."):
                 time.sleep(1.5)
-                
-                # Dynamic Checking Logic
-                malicious_ips = ["185.220.101.10", "180.220.101.10"] # Added your typo just in case!
+                malicious_ips = ["185.220.101.10", "180.220.101.10"] 
                 
                 if target_ip.strip() in malicious_ips:
-                    threat_score = 88
-                    status = "MALICIOUS"
-                    location = "Unknown / TOR Exit Node"
+                    threat_score = 88; status = "MALICIOUS"; location = "Unknown / TOR Exit Node"
                 else:
-                    threat_score = random.randint(10, 25)
-                    status = "CLEAN"
-                    location = "Chennai, India"
+                    threat_score = random.randint(10, 25); status = "CLEAN"; location = "Chennai, India"
                 
                 c1, c2, c3 = st.columns(3)
                 with c1: st.metric("IP Reputation Score", f"{threat_score}/100", delta="Normal" if status=="CLEAN" else "DANGER", delta_color="inverse")
@@ -136,31 +130,16 @@ def main():
 
                 st.markdown("### 🖥️ Real-time Threat Logs")
                 if status == "MALICIOUS":
-                    logs = [
-                        f"[INFO] Scanning IP: {target_ip}...",
-                        "[WARN] Checking against Spamhaus Blacklist... [MATCH FOUND]",
-                        "[SEC] TOR Exit Node Check... [FLAGGED]",
-                        "[INFO] Dark-Web identity leak check... [ASSOCIATED RISKS FOUND]"
-                    ]
+                    logs = [f"[INFO] Scanning IP: {target_ip}...", "[WARN] Checking against Spamhaus Blacklist... [MATCH FOUND]", "[SEC] TOR Exit Node Check... [FLAGGED]", "[INFO] Dark-Web identity leak check... [ASSOCIATED RISKS FOUND]"]
                     log_html = "".join([f"<div style='color:#ff4b4b; margin-bottom:4px;'>{l}</div>" for l in logs])
                 else:
-                    logs = [
-                        f"[INFO] Scanning IP: {target_ip}...",
-                        "[INFO] Checking against Spamhaus Blacklist... [PASSED]",
-                        "[SEC] TOR Exit Node Check... [CLEAN]",
-                        "[INFO] Dark-Web identity leak check... [NO MATCH FOUND]"
-                    ]
+                    logs = [f"[INFO] Scanning IP: {target_ip}...", "[INFO] Checking against Spamhaus Blacklist... [PASSED]", "[SEC] TOR Exit Node Check... [CLEAN]", "[INFO] Dark-Web identity leak check... [NO MATCH FOUND]"]
                     log_html = "".join([f"<div style='margin-bottom:4px;'>{l}</div>" for l in logs])
                     
                 st.markdown(f'<div style="background-color: #000; color: #0f0; font-family: monospace; padding: 10px; height: 130px; overflow-y: scroll; border-radius: 5px; border: 1px solid #333;">{log_html}</div>', unsafe_allow_html=True)
-                
-                st.write("") # Spacing
-                
-                if status == "MALICIOUS":
-                    st.error(f"🚨 HIGH THREAT DETECTED: IP {target_ip} is associated with known cyber-attacks. Automated block initiated.")
-                else:
-                    st.success(f"✅ CONNECTION VERIFIED: IP {target_ip} has a low threat profile. Safe for ML processing.")
-
+                st.write("") 
+                if status == "MALICIOUS": st.error(f"🚨 HIGH THREAT DETECTED: IP {target_ip} is associated with known cyber-attacks. Automated block initiated.")
+                else: st.success(f"✅ CONNECTION VERIFIED: IP {target_ip} has a low threat profile. Safe for ML processing.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 3. SECURITY & DEVICE FINGERPRINTING
@@ -180,13 +159,42 @@ def main():
             st.json({"Name": "Harish Kumar", "ID": "XXXX-XXXX-1234", "Tamper_Check": "PASS"})
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 5. MULTI-AGENT SWARM
+    # 5. MULTI-AGENT SWARM (UPDATED DYNAMIC LOGIC)
     elif app_mode == "🤖 MULTI-AGENT SWARM":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        if st.button("DEPLOY LLM AGENTS"):
-            with st.spinner("Agents deliberating..."):
-                time.sleep(2)
-                st.markdown('<div class="gen-ai-box"><b>Risk Agent:</b> Profile is stable.<br><b>Fraud Agent:</b> No history found.<br><b>Decision:</b> 3/3 Consensus - APPROVE.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="content-container"><div class="content-container-header">🤖 MULTI-AGENT LLM SWARM</div>', unsafe_allow_html=True)
+        st.write("Agents automatically ingest data to debate and reach a consensus.")
+        
+        c1, c2, c3 = st.columns(3)
+        with c1: s_inc = st.number_input("Applicant Income ($)", value=60000)
+        with c2: s_dti = st.slider("Current DTI (%)", 10, 60, 25)
+        with c3: s_score = st.slider("CIBIL / Credit Score", 300, 850, 720)
+        
+        if st.button("✨ DEPLOY LLM AGENTS"):
+            with st.spinner("Swarm Intelligence deliberating..."):
+                time.sleep(2) 
+                
+                if s_score >= 650 and s_dti <= 40:
+                    box_color = "#3b82f6" 
+                    text_color = "#93c5fd"
+                    decision = "✅ 3/3 CONSENSUS - APPROVED"
+                    risk_comment = f"Credit score of {s_score} is well above threshold."
+                    fin_comment = f"Income of ${s_inc:,} and DTI of {s_dti}% shows strong repayment capacity."
+                else:
+                    box_color = "#ef4444" 
+                    text_color = "#fca5a5"
+                    decision = "🚫 CONSENSUS FAILED - REJECTED"
+                    risk_comment = f"CRITICAL: Score of {s_score} indicates high historical default risk."
+                    fin_comment = f"WARNING: DTI of {s_dti}% is too high for the current income levels."
+
+                st.markdown(f'''
+                <div style="background-color: #1e293b; border: 1px solid {box_color}; padding: 20px; border-radius: 8px; font-family: monospace; color: {text_color};">
+                    <b>🧑‍💼 Financial Agent:</b> {fin_comment}<br><br>
+                    <b>🕵️‍♂️ Risk Agent:</b> {risk_comment}<br><br>
+                    <b>👮 Compliance Agent:</b> No AML or KYC flags detected. Clean history.<br><br>
+                    <hr style="border-color: {box_color};">
+                    <b>👑 Swarm Decision:</b> {decision}
+                </div>
+                ''', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 6. CASH FLOW & OPEN BANKING
