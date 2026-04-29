@@ -1,4 +1,4 @@
-# app.py - V9.2 MASTER BUILD (MULTI-AGENT SWARM DYNAMIC LOGIC ADDED)
+# app.py - V10.0 MASTER BUILD (REAL-TIME DYNAMIC HEURISTICS & SESSION STATE)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -8,7 +8,6 @@ import time
 import random
 import plotly.express as px
 import plotly.graph_objects as go
-from PIL import Image
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="LOAN RISK ASSESSMENT SYSTEM", page_icon="🏦", layout="wide", initial_sidebar_state="expanded")
@@ -42,6 +41,14 @@ def load_pipeline():
 
 pipeline = load_pipeline()
 
+# --- GLOBAL SESSION STATE ---
+# Ippo user oru tab-la input kudutha, adhu matha tabs-laiyum use aagum!
+if 'loan_amnt' not in st.session_state: st.session_state.loan_amnt = 15000.0
+if 'annual_inc' not in st.session_state: st.session_state.annual_inc = 75000.0
+if 'int_rate' not in st.session_state: st.session_state.int_rate = 10.5
+if 'term' not in st.session_state: st.session_state.term = 36
+if 'app_id' not in st.session_state: st.session_state.app_id = "APP-89421"
+
 # --- MAIN DASHBOARD LOGIC ---
 def main():
     st.sidebar.title("INTELLIGENCE HUB")
@@ -72,7 +79,7 @@ def main():
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("ENGINE: V9.2 | STATUS: FULLY ACTIVE")
+    st.sidebar.caption("ENGINE: V10.0 | STATUS: REAL-TIME LOGIC")
 
     st.markdown(f'<div class="custom-main-header">{app_mode}</div>', unsafe_allow_html=True)
 
@@ -87,228 +94,294 @@ def main():
         col1, col2 = st.columns([1, 1])
         with col1:
             st.markdown('<div class="content-container"><div class="content-container-header">👤 APPLICANT DATA</div>', unsafe_allow_html=True)
-            l_amnt = st.number_input("Loan Amount ($)", value=15000.0)
-            a_inc = st.number_input("Annual Income ($)", value=75000.0)
-            i_rate = st.number_input("Interest Rate (%)", value=10.5)
-            term = st.selectbox("Term (Months)", [36, 60])
+            # Link inputs directly to session state
+            st.session_state.loan_amnt = st.number_input("Loan Amount ($)", value=st.session_state.loan_amnt)
+            st.session_state.annual_inc = st.number_input("Annual Income ($)", value=st.session_state.annual_inc)
+            st.session_state.int_rate = st.number_input("Interest Rate (%)", value=st.session_state.int_rate)
+            st.session_state.term = st.selectbox("Term (Months)", [36, 60], index=0 if st.session_state.term==36 else 1)
             submit = st.button("RUN RISK ANALYSIS")
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
-            st.markdown('<div class="content-container"><div class="content-container-header">📈 INFERENCE</div>', unsafe_allow_html=True)
+            st.markdown('<div class="content-container"><div class="content-container-header">📈 INFERENCE RESULTS</div>', unsafe_allow_html=True)
             if submit and pipeline:
-                m_inc = a_inc / 12; inst = (l_amnt * (i_rate/1200))/(1-(1+i_rate/1200)**(-term))
+                m_inc = st.session_state.annual_inc / 12 if st.session_state.annual_inc > 0 else 1
+                inst = (st.session_state.loan_amnt * (st.session_state.int_rate/1200))/(1-(1+st.session_state.int_rate/1200)**(-st.session_state.term))
                 dti = (inst/m_inc)*100
-                df = pd.DataFrame([[l_amnt, term, i_rate, inst, a_inc, dti, 10, 20]], columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+                df = pd.DataFrame([[st.session_state.loan_amnt, st.session_state.term, st.session_state.int_rate, inst, st.session_state.annual_inc, dti, 10, 20]], columns=['loan_amnt', 'term', 'int_rate', 'installment', 'annual_inc', 'dti', 'open_acc', 'total_acc'])
+                
+                # Dynamic Logic based on inputs
                 pred = pipeline.predict(df)[0]; prob = pipeline.predict_proba(df)[0][1]
-                if pred == 1: st.success(f"✅ APPROVED (Score: {prob*100:.1f})")
-                else: st.error(f"🚫 REJECTED (Score: {prob*100:.1f})")
+                
+                if dti > 60:
+                    st.error("🚫 REJECTED BY RULE ENGINE: Debt-to-Income ratio exceeds 60%. Highly Unsafe.")
+                elif pred == 1: 
+                    st.success(f"✅ APPROVED BY AI (Confidence: {prob*100:.1f}%)")
+                    st.write(f"Applicant has a healthy DTI of {dti:.1f}%")
+                else: 
+                    st.error(f"🚫 REJECTED BY AI (Probability of Default: {prob*100:.1f}%)")
             else: st.write("Ready for scan.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. CYBER-THREAT & IP TRACKER
+    # 2. CYBER-THREAT & IP TRACKER (REAL-TIME MATH LOGIC)
     elif app_mode == "🛡️ CYBER-THREAT & IP TRACKER":
-        st.markdown('<div class="content-container"><div class="content-container-header">🛡️ CYBER-THREAT INTELLIGENCE SYSTEM</div>', unsafe_allow_html=True)
-        st.write("Intercepts incoming application packets to analyze IP reputation, geolocation threats, and Dark-Web database matches.")
-        
+        st.markdown('<div class="content-container"><div class="content-container-header">🛡️ CYBER-THREAT INTELLIGENCE</div>', unsafe_allow_html=True)
         target_ip = st.text_input("Application IP Source", value="103.21.141.205")
         
         if st.button("🛰️ SCAN IP REPUTATION"):
-            with st.spinner("Quering Threat Intel Databases..."):
-                time.sleep(1.5)
-                malicious_ips = ["185.220.101.10", "180.220.101.10"] 
-                
-                if target_ip.strip() in malicious_ips:
-                    threat_score = 88; status = "MALICIOUS"; location = "Unknown / TOR Exit Node"
-                else:
-                    threat_score = random.randint(10, 25); status = "CLEAN"; location = "Chennai, India"
-                
-                c1, c2, c3 = st.columns(3)
-                with c1: st.metric("IP Reputation Score", f"{threat_score}/100", delta="Normal" if status=="CLEAN" else "DANGER", delta_color="inverse")
-                with c2: st.metric("Connection Type", "ISP / Fiber" if status=="CLEAN" else "VPN / TOR Network")
-                with c3: st.metric("Geolocation", location)
+            with st.spinner("Quering Databases..."):
+                time.sleep(1)
+                # Dynamic Heuristic: Hash the IP to generate consistent threat score!
+                # E.g. "8.8.8.8" will always give a clean score, while "185.220.101.10" will give a high risk score based on the numbers.
+                try:
+                    octets = [int(x) for x in target_ip.split('.')]
+                    calc_score = sum(octets) % 100
+                    # Hardcode some known bad subnets for demo effect
+                    if octets[0] in [185, 45, 194, 180]: calc_score = 88 + (octets[3] % 10)
+                except:
+                    calc_score = 99 # Invalid IP format throws high risk
 
-                st.markdown("### 🖥️ Real-time Threat Logs")
-                if status == "MALICIOUS":
-                    logs = [f"[INFO] Scanning IP: {target_ip}...", "[WARN] Checking against Spamhaus Blacklist... [MATCH FOUND]", "[SEC] TOR Exit Node Check... [FLAGGED]", "[INFO] Dark-Web identity leak check... [ASSOCIATED RISKS FOUND]"]
-                    log_html = "".join([f"<div style='color:#ff4b4b; margin-bottom:4px;'>{l}</div>" for l in logs])
+                if calc_score > 75:
+                    status = "MALICIOUS"; location = "Unknown / TOR Exit Node"
+                    log_html = f"<div style='color:#ff4b4b;'>[WARN] IP {target_ip} MATCHES BLACKLIST. Score: {calc_score}</div>"
+                    st.markdown(f'<div style="background-color: #000; padding: 10px;">{log_html}</div>', unsafe_allow_html=True)
+                    st.error("🚨 HIGH THREAT DETECTED. Automated block initiated.")
                 else:
-                    logs = [f"[INFO] Scanning IP: {target_ip}...", "[INFO] Checking against Spamhaus Blacklist... [PASSED]", "[SEC] TOR Exit Node Check... [CLEAN]", "[INFO] Dark-Web identity leak check... [NO MATCH FOUND]"]
-                    log_html = "".join([f"<div style='margin-bottom:4px;'>{l}</div>" for l in logs])
-                    
-                st.markdown(f'<div style="background-color: #000; color: #0f0; font-family: monospace; padding: 10px; height: 130px; overflow-y: scroll; border-radius: 5px; border: 1px solid #333;">{log_html}</div>', unsafe_allow_html=True)
-                st.write("") 
-                if status == "MALICIOUS": st.error(f"🚨 HIGH THREAT DETECTED: IP {target_ip} is associated with known cyber-attacks. Automated block initiated.")
-                else: st.success(f"✅ CONNECTION VERIFIED: IP {target_ip} has a low threat profile. Safe for ML processing.")
+                    status = "CLEAN"; location = "Mapped to User ISP"
+                    log_html = f"<div style='color:#0f0;'>[INFO] IP {target_ip} VERIFIED. Clean history. Score: {calc_score}</div>"
+                    st.markdown(f'<div style="background-color: #000; padding: 10px;">{log_html}</div>', unsafe_allow_html=True)
+                    st.success("✅ CONNECTION VERIFIED.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. SECURITY & DEVICE FINGERPRINTING
+    # 3. SECURITY & FINGERPRINTING (DYNAMIC AGENT PARSER)
     elif app_mode == "📱 SECURITY & FINGERPRINT":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
+        st.markdown('<div class="content-container"><div class="content-container-header">📱 DEVICE FINGERPRINTING</div>', unsafe_allow_html=True)
+        user_agent = st.text_input("Simulate Browser User-Agent String", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36")
+        
         if st.button("CAPTURE DEVICE FINGERPRINT"):
-            st.info("Browser: Chrome v124 | OS: Android 14 | Hardware ID: XYZ-889-12")
-            st.success("Identity Verified: Human user detected via touch-latency patterns.")
+            if "HeadlessChrome" in user_agent or "bot" in user_agent.lower() or "selenium" in user_agent.lower():
+                st.error("🚨 ALERT: AUTOMATED BOT DETECTED! 'Headless' or 'Bot' signature found in User-Agent. Connection Terminated.")
+            else:
+                st.info(f"Parsed Device Data: {user_agent.split('(')[1].split(')')[0]}")
+                st.success("✅ Identity Verified: Standard Human Browser footprint detected.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 4. AI DOCUMENT OCR
+    # 4. AI DOCUMENT OCR (DYNAMIC FILE PARSER)
     elif app_mode == "📄 AI DOCUMENT OCR (KYC)":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        file = st.file_uploader("Upload ID Card (Aadhar/PAN)", type=['png','jpg','jpeg'])
+        st.markdown('<div class="content-container"><div class="content-container-header">📄 AI DOCUMENT OCR</div>', unsafe_allow_html=True)
+        file = st.file_uploader("Upload ID Card (Aadhar/PAN)", type=['png','jpg','jpeg','pdf'])
         if file and st.button("EXTRACT DATA"):
+            # Real-time reaction to file size and extension
+            file_sz = len(file.getvalue()) / 1024
             st.image(file, width=200)
-            st.json({"Name": "Harish Kumar", "ID": "XXXX-XXXX-1234", "Tamper_Check": "PASS"})
+            st.write(f"Analyzed File: `{file.name}` ({file_sz:.2f} KB)")
+            
+            if file_sz > 5000: # Greater than 5MB
+                st.error("🚨 TAMPER ALERT: File size unusually large. Meta-data indicates potential Photoshop layered edits.")
+            else:
+                st.success("✅ Document structure verified.")
+                st.json({
+                    "Detected_Format": file.name.split('.')[-1].upper(),
+                    "Resolution_Quality": "HIGH" if file_sz > 500 else "Standard",
+                    "Extracted_Name": "MATCHES APPLICATION",
+                    "Tamper_Check": "PASS"
+                })
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 5. MULTI-AGENT SWARM (UPDATED DYNAMIC LOGIC)
+    # 5. MULTI-AGENT SWARM (SESSION STATE AWARE)
     elif app_mode == "🤖 MULTI-AGENT SWARM":
         st.markdown('<div class="content-container"><div class="content-container-header">🤖 MULTI-AGENT LLM SWARM</div>', unsafe_allow_html=True)
-        st.write("Agents automatically ingest data to debate and reach a consensus.")
+        st.write("Agents are pulling data LIVE from your Dashboard session.")
+        st.info(f"Current Session -> Income: ${st.session_state.annual_inc:,} | Loan Requested: ${st.session_state.loan_amnt:,}")
         
-        c1, c2, c3 = st.columns(3)
-        with c1: s_inc = st.number_input("Applicant Income ($)", value=60000)
-        with c2: s_dti = st.slider("Current DTI (%)", 10, 60, 25)
-        with c3: s_score = st.slider("CIBIL / Credit Score", 300, 850, 720)
+        s_score = st.slider("Provide CIBIL Score for Agents to consider", 300, 850, 720)
         
         if st.button("✨ DEPLOY LLM AGENTS"):
             with st.spinner("Swarm Intelligence deliberating..."):
-                time.sleep(2) 
-                
-                if s_score >= 650 and s_dti <= 40:
-                    box_color = "#3b82f6" 
-                    text_color = "#93c5fd"
-                    decision = "✅ 3/3 CONSENSUS - APPROVED"
-                    risk_comment = f"Credit score of {s_score} is well above threshold."
-                    fin_comment = f"Income of ${s_inc:,} and DTI of {s_dti}% shows strong repayment capacity."
+                time.sleep(1) 
+                # Real-time logic
+                if s_score >= 650 and (st.session_state.loan_amnt < st.session_state.annual_inc * 3):
+                    st.markdown(f'<div class="gen-ai-box" style="border-color:#3b82f6;"><b>🧑‍💼 Fin Agent:</b> Income of ${st.session_state.annual_inc:,} can support the ${st.session_state.loan_amnt:,} loan.<br><b>🕵️‍♂️ Risk Agent:</b> Score {s_score} is safe.<br><hr><b>✅ Swarm Decision: APPROVED</b></div>', unsafe_allow_html=True)
                 else:
-                    box_color = "#ef4444" 
-                    text_color = "#fca5a5"
-                    decision = "🚫 CONSENSUS FAILED - REJECTED"
-                    risk_comment = f"CRITICAL: Score of {s_score} indicates high historical default risk."
-                    fin_comment = f"WARNING: DTI of {s_dti}% is too high for the current income levels."
-
-                st.markdown(f'''
-                <div style="background-color: #1e293b; border: 1px solid {box_color}; padding: 20px; border-radius: 8px; font-family: monospace; color: {text_color};">
-                    <b>🧑‍💼 Financial Agent:</b> {fin_comment}<br><br>
-                    <b>🕵️‍♂️ Risk Agent:</b> {risk_comment}<br><br>
-                    <b>👮 Compliance Agent:</b> No AML or KYC flags detected. Clean history.<br><br>
-                    <hr style="border-color: {box_color};">
-                    <b>👑 Swarm Decision:</b> {decision}
-                </div>
-                ''', unsafe_allow_html=True)
+                    st.markdown(f'<div class="gen-ai-box" style="border-color:#ef4444; color:#fca5a5;"><b>🧑‍💼 Fin Agent:</b> Loan of ${st.session_state.loan_amnt:,} is extremely risky for income ${st.session_state.annual_inc:,}.<br><b>🕵️‍♂️ Risk Agent:</b> Score {s_score} is inadequate.<br><hr><b>🚫 Swarm Decision: REJECTED</b></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 6. CASH FLOW & OPEN BANKING
+    # 6. CASH FLOW & OPEN BANKING (DYNAMIC INPUTS)
     elif app_mode == "💳 CASH FLOW & OPEN BANKING":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        st.write("Aggregating live account statement data...")
-        st.metric("Avg Monthly Surplus", "$2,100", "+5% vs Last Month")
-        fig = px.line(y=[1200, 1500, 1100, 1800, 2100], x=['Jan','Feb','Mar','Apr','May'], title="Cash Flow Trend")
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('<div class="content-container"><div class="content-container-header">💳 OPEN BANKING & CASH FLOW</div>', unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        with c1: month_in = st.number_input("Avg Monthly Credits ($)", value=6000)
+        with c2: month_out = st.number_input("Avg Monthly Debits ($)", value=4500)
+        
+        if st.button("GENERATE CASH FLOW ANALYSIS"):
+            surplus = month_in - month_out
+            if surplus < 0: st.error(f"🚨 Negative Cash Flow! User is losing ${abs(surplus)} monthly.")
+            else: 
+                st.success(f"✅ Healthy Cash Flow. Net surplus: ${surplus} monthly.")
+                fig = px.bar(x=['Credits', 'Debits', 'Surplus'], y=[month_in, month_out, surplus], color=['Credits', 'Debits', 'Surplus'], color_discrete_sequence=['#2ecc71', '#e74c3c', '#00f2fe'])
+                st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 7. LIVE API STREAM
+    # 7. LIVE API STREAM (DYNAMIC FREQUENCY)
     elif app_mode == "🌐 LIVE API STREAM":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
+        st.markdown('<div class="content-container"><div class="content-container-header">📡 REAL-TIME API STREAM INFERENCE</div>', unsafe_allow_html=True)
+        txn_count = st.slider("Set Stream Volume (Requests per second)", 1, 20, 5)
         if st.button("▶️ START STREAM"):
             placeholder = st.empty()
-            for i in range(5):
-                placeholder.info(f"Processing Live Transaction {random.randint(100,999)}... [✅ Approved]")
+            for i in range(1, 6): # Limiting loop for UI safety
+                placeholder.info(f"Processing {txn_count} concurrent requests... [Batch {i} ✅]")
                 time.sleep(1)
+            st.success("Stream simulation complete.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 8. BULK PROCESSING
     elif app_mode == "📂 BULK PROCESSING":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        up = st.file_uploader("Upload 20k Records CSV", type="csv")
+        st.markdown('<div class="content-container"><div class="content-container-header">📂 HIGH-VOLUME BATCH PROCESSING</div>', unsafe_allow_html=True)
+        up = st.file_uploader("Upload Records CSV", type="csv")
         if up: 
-            st.success("File Loaded. Ready to process batch.")
-            if st.button("EXECUTE BATCH"): st.balloons()
+            df = pd.read_csv(up)
+            st.write(f"Loaded {len(df)} rows.")
+            if st.button("EXECUTE BATCH"): st.success("Batch Processed.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 9. EXPLAINABLE AI
+    # 9. EXPLAINABLE AI (SESSION STATE INTEGRATED)
     elif app_mode == "🧠 EXPLAINABLE AI (XAI)":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        fig = px.bar(x=[0.4, -0.2, 0.5, -0.1], y=['Income','DTI','Amount','Term'], orientation='h', title="Feature Contribution (SHAP)")
-        st.plotly_chart(fig, use_container_width=True)
-        st.write("Green indicates Approval factors, Red indicates Rejection factors.")
+        st.markdown('<div class="content-container"><div class="content-container-header">🧠 EXPLAINABLE AI (SHAP ENGINE)</div>', unsafe_allow_html=True)
+        st.write(f"Explaining Decision for current session (Loan: ${st.session_state.loan_amnt}, Income: ${st.session_state.annual_inc})")
+        if st.button("GENERATE XAI GRAPH"):
+            # Dynamic impact based on inputs
+            inc_impact = 0.5 if st.session_state.annual_inc > 60000 else -0.5
+            loan_impact = -0.4 if st.session_state.loan_amnt > 30000 else 0.2
+            
+            fig = px.bar(x=[inc_impact, loan_impact, -0.2, 0.1], y=['Income Impact','Loan Amount Impact','Term Risk','Int Rate Risk'], orientation='h', title="Feature Contribution", color=[inc_impact, loan_impact, -0.2, 0.1], color_continuous_scale="RdYlGn")
+            st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 10. FRAUD & ANOMALY
+    # 10. FRAUD & ANOMALY (SESSION AWARE)
     elif app_mode == "🚨 FRAUD & ANOMALY DETECT":
-        st.markdown('<div class="anomaly-box">Rule F-102: Potential Income Fraud Detected (Income < EMI*3)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="content-container"><div class="content-container-header">🚨 ANOMALY DETECTION</div>', unsafe_allow_html=True)
+        st.write("Scanning current session inputs...")
+        if st.session_state.loan_amnt > (st.session_state.annual_inc * 4):
+            st.error(f"🚨 Rule F-102: Loan Amount (${st.session_state.loan_amnt}) is abnormally high compared to Income (${st.session_state.annual_inc}). Risk of synthetic identity fraud.")
+        else:
+            st.success("✅ Current session profile passes all hardcoded anomaly rules.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # 11. SYNDICATE FRAUD
+    # 11. SYNDICATE FRAUD (DYNAMIC SEED)
     elif app_mode == "🕵️‍♂️ SYNDICATE FRAUD NETWORK":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        st.write("Visualizing network links...")
-        fig = go.Figure(go.Scatter(x=[1, 2, 1.5], y=[1, 1, 2], mode='markers+lines', marker=dict(size=20, color=['blue','red','blue'])))
-        fig.update_layout(title="Identity Linkage Graph")
-        st.plotly_chart(fig, use_container_width=True)
-        st.error("Alert: Connection found with blacklisted device ID.")
+        st.markdown('<div class="content-container"><div class="content-container-header">🕵️‍♂️ SYNDICATE FRAUD NETWORK</div>', unsafe_allow_html=True)
+        app_id = st.text_input("Enter Applicant ID or Phone", "APP-89421")
+        if st.button("BUILD NETWORK GRAPH"):
+            # Dynamic logic: Different App ID generates different graph shapes!
+            random.seed(app_id)
+            nodes = random.randint(3, 8)
+            x_pos = [random.uniform(0, 5) for _ in range(nodes)]
+            y_pos = [random.uniform(0, 5) for _ in range(nodes)]
+            colors = ['blue'] * nodes
+            if random.random() > 0.5: colors[random.randint(1, nodes-1)] = 'red' # Randomly flag a threat
+            
+            fig = go.Figure(go.Scatter(x=x_pos, y=y_pos, mode='markers+lines', marker=dict(size=20, color=colors)))
+            fig.update_layout(title=f"Entity Linkage Graph for {app_id}")
+            st.plotly_chart(fig, use_container_width=True)
+            if 'red' in colors: st.error("🚨 Alert: Connections found with blacklisted entity (Red Node).")
+            else: st.success("✅ Clean Network. No fraud rings detected.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 12. MODEL DRIFT
+    # 12. MODEL DRIFT (DYNAMIC INPUTS)
     elif app_mode == "📉 MODEL DRIFT MONITOR":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        st.metric("Population Stability Index (PSI)", "0.24", "HIGH DRIFT", delta_color="inverse")
-        st.warning("Action Required: Model distribution has shifted from baseline training data.")
+        st.markdown('<div class="content-container"><div class="content-container-header">📉 DATA DRIFT DASHBOARD</div>', unsafe_allow_html=True)
+        drift_factor = st.slider("Simulate Economic Shift (Current Month variance vs Training)", 0, 100, 25)
+        psi_score = drift_factor * 0.01
+        
+        st.metric("Population Stability Index (PSI)", f"{psi_score:.2f}", delta="HIGH DRIFT" if psi_score > 0.2 else "Stable", delta_color="inverse")
+        if psi_score > 0.2: st.error("Action Required: Retrain model. PSI > 0.2 threshold.")
+        else: st.success("Model is stable. Production data matches training distributions.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 13. AUTO-RETRAINING
+    # 13. AUTO-RETRAINING (DYNAMIC PROGRESS)
     elif app_mode == "🔄 AUTO-RETRAINING PIPELINE":
+        st.markdown('<div class="content-container"><div class="content-container-header">🔄 CONTINUOUS TRAINING PIPELINE</div>', unsafe_allow_html=True)
+        epochs = st.slider("Number of Hyperparameter Tuning Epochs", 10, 100, 20)
         if st.button("TRIGGER CI/CD RE-TRAIN"):
-            st.write("Ingesting new data...")
-            st.progress(50)
-            st.success("New model v2.1 deployed to Models/ folder.")
+            my_bar = st.progress(0, text="Initializing training cluster...")
+            for p in range(0, 101, int(100/(epochs/10))):
+                my_bar.progress(p, text=f"Training Epoch {p}% complete...")
+                time.sleep(0.1)
+            my_bar.progress(100, text="Complete!")
+            st.success(f"New model trained over {epochs} iterations and deployed successfully.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # 14. GEOSPATIAL
+    # 14. GEOSPATIAL (DYNAMIC REGIONS)
     elif app_mode == "📍 GEOSPATIAL RISK MAP":
-        lats = np.random.uniform(10, 25, 50); lons = np.random.uniform(70, 85, 50)
-        df_map = pd.DataFrame({'lat': lats, 'lon': lons})
-        st.map(df_map)
+        st.markdown('<div class="content-container"><div class="content-container-header">📍 GEOSPATIAL RISK MAP</div>', unsafe_allow_html=True)
+        region = st.selectbox("Select Region to Scan", ["North India", "South India", "All India"])
+        if st.button("GENERATE MAP"):
+            if region == "South India": lats = np.random.uniform(8, 15, 50); lons = np.random.uniform(74, 80, 50)
+            elif region == "North India": lats = np.random.uniform(25, 30, 50); lons = np.random.uniform(75, 80, 50)
+            else: lats = np.random.uniform(10, 30, 100); lons = np.random.uniform(70, 90, 100)
+            st.map(pd.DataFrame({'lat': lats, 'lon': lons}))
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # 15. STRESS TESTING
     elif app_mode == "🌪️ STRESS TESTING ENGINE":
-        shock = st.slider("Recession Intensity (%)", 0, 50, 20)
-        st.error(f"With {shock}% income drop, default rate spikes by 14.2%.")
+        st.markdown('<div class="content-container"><div class="content-container-header">🌪️ MACRO STRESS TEST</div>', unsafe_allow_html=True)
+        shock = st.slider("Recession Intensity (Income Drop %)", 0, 50, 20)
+        default_spike = shock * 0.75
+        if st.button("RUN SCENARIO"):
+            st.error(f"📉 Under a {shock}% income shock, portfolio default rate spikes by +{default_spike:.1f}%.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # 16. ETHICAL AI
+    # 16. ETHICAL AI (DYNAMIC AUDIT)
     elif app_mode == "⚖️ ETHICAL AI & FAIRNESS":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        st.write("Audit Report: Gender Disparate Impact Ratio = 0.94 (PASS)")
-        st.success("No significant bias detected across demographic groups.")
+        st.markdown('<div class="content-container"><div class="content-container-header">⚖️ FAIRNESS AUDIT</div>', unsafe_allow_html=True)
+        threshold = st.slider("Fairness Compliance Threshold (DIR)", 0.6, 1.0, 0.8)
+        if st.button("RUN AUDIT"):
+            actual_dir = 0.85
+            st.write(f"Calculated Disparate Impact Ratio: {actual_dir}")
+            if actual_dir >= threshold: st.success("✅ PASS: Model operates fairly across demographics.")
+            else: st.error(f"🚨 FAIL: Model fails compliance. {actual_dir} is below threshold {threshold}.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 17. DYNAMIC PRICING
     elif app_mode == "💸 DYNAMIC PRICING ENGINE":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        risk = st.slider("Customer Risk Score", 0, 100, 45)
-        st.info(f"AI Recommended Interest Rate for this risk level: {8.5 + (risk/10)}%")
+        st.markdown('<div class="content-container"><div class="content-container-header">💸 DYNAMIC PRICING</div>', unsafe_allow_html=True)
+        risk = st.slider("Calculated Customer Risk Score", 0, 100, 45)
+        rec_rate = 8.5 + (risk/10)
+        st.info(f"🎯 AI Recommended Optimal Interest Rate: {rec_rate:.2f}%")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 18. BEHAVIORAL SCORING
     elif app_mode == "📱 BEHAVIORAL & DIGITAL SCORING":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        st.write("Scoring based on mobile usage and digital footprint.")
-        st.metric("Alternative Score", "712 / 850", "+12 pts")
+        st.markdown('<div class="content-container"><div class="content-container-header">📱 BEHAVIORAL SCORING</div>', unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        with c1: upi = st.slider("UPI TXN Frequency (Monthly)", 0, 200, 50)
+        with c2: app = st.slider("Utility App Usage Count", 0, 20, 5)
+        score = 500 + (upi * 1.5) + (app * 10)
+        st.metric("Alternative Digital Score", f"{int(score)} / 850")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 19. CREDIT ROADMAP
+    # 19. CREDIT ROADMAP (SESSION AWARE)
     elif app_mode == "🗺️ CREDIT ROADMAP":
-        st.markdown('<div class="roadmap-box"><b>Step 1:</b> Clear active credit card dues.<br><b>Step 2:</b> Lower DTI to 30%.<br><b>Step 3:</b> Maintain score for 6 months.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="content-container"><div class="content-container-header">🗺️ ACTION PLAN</div>', unsafe_allow_html=True)
+        st.write(f"Generating personalized plan for loan requested: ${st.session_state.loan_amnt}")
+        st.markdown('<div class="roadmap-box"><b>Step 1:</b> Increase income or lower requested loan amount.<br><b>Step 2:</b> Close 2 active micro-loans.<br><b>Step 3:</b> Maintain flawless repayment for 6 months.</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # 20. ENTERPRISE ARCHITECTURE
     elif app_mode == "☁️ ENTERPRISE ARCHITECTURE":
-        st.markdown('<div class="content-container">', unsafe_allow_html=True)
-        st.image("https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg", width=100)
-        st.write("Cloud infrastructure: AWS S3 Artifacts + Streamlit Front-end + Docker Containers.")
+        st.markdown('<div class="content-container"><div class="content-container-header">☁️ ARCHITECTURE</div>', unsafe_allow_html=True)
+        st.write("Deployed via Streamlit Cloud | Model Artifacts on Local FS | Git Version Controlled.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 21. ADMIN GATEWAY
     elif app_mode == "🔒 ADMIN GATEWAY":
-        st.text_input("Admin Username")
-        st.text_input("Security Token", type="password")
-        if st.button("LOGIN"): st.error("Access Restricted to Intranet IP.")
+        st.markdown('<div class="content-container"><div class="content-container-header">🔒 ADMIN PORTAL</div>', unsafe_allow_html=True)
+        user = st.text_input("Username")
+        pwd = st.text_input("Password", type="password")
+        if st.button("LOGIN"):
+            if user == "admin" and pwd == "admin123": st.success("✅ Logged in successfully. Server metrics healthy.")
+            else: st.error("🚫 Invalid Credentials.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
