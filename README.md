@@ -1,4 +1,4 @@
-Loan Repayment Prediction
+Loan Approval Prediction
 
 A Streamlit application that trains a scikit-learn classifier on 20,000 historical loan records and estimates the probability that a loan is paid back. It includes an input form with validation, an analytics dashboard, and a model performance page that reports metrics computed from the real held-out test set.
 
