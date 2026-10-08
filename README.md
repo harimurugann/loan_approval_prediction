@@ -73,5 +73,3 @@ Inputs outside the training ranges are rejected rather than extrapolated.
 
 Responsible use
 This project is for demonstration, education, and portfolio purposes. Predictions reflect historical patterns in one dataset, are not guaranteed, and may embed bias from the training data. Real lending decisions require additional financial, regulatory, and human review. Do not use this application to make decisions about real people.
-C
-PASTED
